@@ -3,32 +3,45 @@
  */
 
 /**
+ * スプレッドシートから日付を取得するヘルパー関数
+ */
+function getDateFromSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sourceSheet = ss.getSheetByName(CONFIG.CALENDAR.DATE_SOURCE.SHEET_NAME);
+  
+  if (!sourceSheet) {
+    throw new Error(`「${CONFIG.CALENDAR.DATE_SOURCE.SHEET_NAME}」シートが見つかりません`);
+  }
+  
+  const startDateValue = sourceSheet.getRange(CONFIG.CALENDAR.DATE_SOURCE.START_DATE_CELL).getValue();
+  const endDateValue = sourceSheet.getRange(CONFIG.CALENDAR.DATE_SOURCE.END_DATE_CELL).getValue();
+  
+  if (!startDateValue || !endDateValue) {
+    throw new Error(`${CONFIG.CALENDAR.DATE_SOURCE.SHEET_NAME}シートの${CONFIG.CALENDAR.DATE_SOURCE.START_DATE_CELL}（開始日）または${CONFIG.CALENDAR.DATE_SOURCE.END_DATE_CELL}（終了日）が設定されていません`);
+  }
+  
+  // 日付をJSTで処理（時刻を0:00:00に設定）
+  const startDate = new Date(startDateValue);
+  startDate.setHours(0, 0, 0, 0);
+  
+  // 終了日は23:59:59.999に設定して、その日の終わりまで含める
+  const endDate = new Date(endDateValue);
+  endDate.setHours(23, 59, 59, 999);
+  
+  return { startDate, endDate };
+}
+
+/**
  * Googleカレンダーからイベントデータを取得
- * @param {string} calendarId - カレンダーID（省略時はデフォルトカレンダー）
+ * @param {string} calendarId - カレンダーID
  * @param {Date} startDate - 開始日
  * @param {Date} endDate - 終了日
  * @return {Array} イベントデータの配列
  */
-function getCalendarEvents(calendarId = 'primary', startDate = null, endDate = null) {
-  // デフォルトの期間を設定（今月）
-  if (!startDate) {
-    startDate = new Date();
-    startDate.setDate(1);
-    startDate.setHours(0, 0, 0, 0);
-  }
-  
-  if (!endDate) {
-    endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + 1);
-    endDate.setDate(0);
-    endDate.setHours(23, 59, 59, 999);
-  }
-  
+function getCalendarEvents(calendarId, startDate, endDate) {
   try {
     // カレンダーを取得
-    const calendar = calendarId === 'primary' 
-      ? CalendarApp.getDefaultCalendar()
-      : CalendarApp.getCalendarById(calendarId);
+    const calendar = CalendarApp.getCalendarById(calendarId);
     
     if (!calendar) {
       throw new Error(`カレンダー（ID: ${calendarId}）が見つかりません。`);
@@ -67,159 +80,58 @@ function getCalendarEvents(calendarId = 'primary', startDate = null, endDate = n
  * @param {Date} startDate - 開始日
  * @param {Date} endDate - 終了日
  */
-function exportCalendarToSheet(targetSheetName = 'カレンダーデータ', calendarId = 'primary', startDate = null, endDate = null) {
+function exportCalendarToSheet(targetSheetName, calendarId, startDate, endDate) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   
   // シートを取得または作成
   let sheet = ss.getSheetByName(targetSheetName);
   if (!sheet) {
     sheet = ss.insertSheet(targetSheetName);
-  } else {
-    sheet.clear();
+  }
+  
+  // A~E列のみクリア（他の列のデータは保持）
+  const lastRow = sheet.getMaxRows();
+  if (lastRow > 0) {
+    sheet.getRange(2, 1, lastRow, 5).clear();
   }
   
   // イベントデータを取得
   const events = getCalendarEvents(calendarId, startDate, endDate);
   
   if (events.length === 0) {
-    console.log('イベントが見つかりませんでした。');
-    return;
+    sheet.getRange(2, 1).setValue('指定期間にイベントはありません');
+    console.log('指定期間にイベントはありません');
+    return {
+      sheetName: targetSheetName,
+      eventCount: 0
+    };
   }
   
-  // ヘッダーを設定
-  const headers = [
-    'タイトル',
-    '開始日時',
-    '終了日時',
-    '場所',
-    '説明',
-    '終日',
-    '作成者',
-    'イベントID'
-  ];
-  
+  // ヘッダーを設定（元のコードに合わせて変更）
+  const headers = ['日付', '開始時刻', '終了時刻', 'タイトル', 'コメント'];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-  sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
   
-  // データを書き込み
+  // データを書き込み（元のコードのフォーマットに合わせる）
   const data = events.map(event => [
+    Utilities.formatDate(event.startTime, 'JST', 'yyyy/M/d'),
+    event.allDay ? '終日' : Utilities.formatDate(event.startTime, 'JST', 'H:mm:ss'),
+    event.allDay ? '終日' : Utilities.formatDate(event.endTime, 'JST', 'H:mm:ss'),
     event.title,
-    event.startTime,
-    event.endTime,
-    event.location || '',
-    event.description || '',
-    event.allDay ? 'はい' : 'いいえ',
-    event.creators || '',
-    event.id
+    event.description || ''  // 説明をE列に直接記入
   ]);
   
   sheet.getRange(2, 1, data.length, headers.length).setValues(data);
-  
-  // 列幅を自動調整
-  for (let i = 1; i <= headers.length; i++) {
-    sheet.autoResizeColumn(i);
-  }
   
   console.log(`${events.length}件のイベントをシート「${targetSheetName}」にエクスポートしました。`);
   
   return {
     sheetName: targetSheetName,
-    eventCount: events.length,
-    period: {
-      start: startDate || '今月初',
-      end: endDate || '今月末'
-    }
+    eventCount: events.length
   };
 }
 
 /**
- * 複数のカレンダーからイベントを統合して取得
- * @param {Array<string>} calendarIds - カレンダーIDの配列
- * @param {Date} startDate - 開始日
- * @param {Date} endDate - 終了日
- * @return {Array} 統合されたイベントデータ
- */
-function getMultipleCalendarEvents(calendarIds, startDate = null, endDate = null) {
-  const allEvents = [];
-  
-  calendarIds.forEach(calendarId => {
-    try {
-      const events = getCalendarEvents(calendarId, startDate, endDate);
-      events.forEach(event => {
-        event.calendarId = calendarId;
-        allEvents.push(event);
-      });
-    } catch (error) {
-      console.error(`カレンダー ${calendarId} の取得に失敗: ${error.message}`);
-    }
-  });
-  
-  // 開始時刻でソート
-  allEvents.sort((a, b) => a.startTime - b.startTime);
-  
-  return allEvents;
-}
-
-/**
- * カレンダーデータをCSVとしてエクスポート（ボタン用）
- */
-function exportCalendarToCsvFile() {
-  try {
-    // 今月のイベントを取得
-    const events = getCalendarEvents();
-    
-    if (events.length === 0) {
-      SpreadsheetApp.getUi().alert('イベントが見つかりませんでした。');
-      return;
-    }
-    
-    // CSVデータを作成
-    const csvData = [
-      ['タイトル', '開始日時', '終了日時', '場所', '説明', '終日'],
-      ...events.map(event => [
-        event.title,
-        Utilities.formatDate(event.startTime, Session.getScriptTimeZone(), 'yyyy/MM/dd HH:mm'),
-        Utilities.formatDate(event.endTime, Session.getScriptTimeZone(), 'yyyy/MM/dd HH:mm'),
-        event.location || '',
-        event.description || '',
-        event.allDay ? 'はい' : 'いいえ'
-      ])
-    ];
-    
-    // CSVファイルとして保存
-    const fileName = `カレンダーエクスポート_${Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd')}.csv`;
-    const csvContent = csvData.map(row => row.map(cell => {
-      const value = String(cell);
-      if (value.includes(',') || value.includes('\n') || value.includes('"')) {
-        return '"' + value.replace(/"/g, '""') + '"';
-      }
-      return value;
-    }).join(',')).join('\n');
-    
-    const blob = Utilities.newBlob('\uFEFF' + csvContent, 'text/csv', fileName);
-    const file = DriveApp.createFile(blob);
-    
-    console.log(`カレンダーデータをCSVファイルとして保存しました: ${fileName}`);
-    
-    // ダウンロードリンクを表示
-    const downloadUrl = file.getDownloadUrl();
-    const ui = SpreadsheetApp.getUi();
-    ui.alert(
-      'エクスポート完了',
-      `カレンダーデータをCSVファイルとして保存しました。\n\nファイル名: ${fileName}\n\nダウンロードURL:\n${downloadUrl}`,
-      ui.ButtonSet.OK
-    );
-    
-    return file;
-    
-  } catch (error) {
-    SpreadsheetApp.getUi().alert(`エラー: ${error.message}`);
-    throw error;
-  }
-}
-
-/**
- * 施設ごとのカレンダーデータを取得（ボタン用）
+ * カレンダーデータを同期（ボタン用）
  */
 function syncCalendarData() {
   try {
@@ -227,19 +139,37 @@ function syncCalendarData() {
     const calendarIds = CONFIG.CALENDAR.CALENDAR_IDS;
     const outputSheet = CONFIG.CALENDAR.OUTPUT_SHEET;
     
-    // デフォルト期間を設定
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - CONFIG.CALENDAR.DEFAULT_DAYS);
-    const endDate = new Date();
+    // シートから日付を取得
+    const { startDate, endDate } = getDateFromSheet();
+    
+    console.log(`期間: ${Utilities.formatDate(startDate, 'JST', 'yyyy/MM/dd')} - ${Utilities.formatDate(endDate, 'JST', 'yyyy/MM/dd')}`);
     
     if (calendarIds.length === 1) {
       // 単一カレンダーの場合
       const result = exportCalendarToSheet(outputSheet, calendarIds[0], startDate, endDate);
       console.log(`カレンダー同期完了: ${result.eventCount}件のイベントを取得`);
+      console.log(`スプレッドシート: ${SpreadsheetApp.getActiveSpreadsheet().getName()}`);
+      console.log(`シート: ${outputSheet}`);
       return result;
     } else {
       // 複数カレンダーの場合
-      const allEvents = getMultipleCalendarEvents(calendarIds, startDate, endDate);
+      const allEvents = [];
+      
+      calendarIds.forEach(calendarId => {
+        try {
+          const events = getCalendarEvents(calendarId, startDate, endDate);
+          events.forEach(event => {
+            event.calendarId = calendarId;
+            allEvents.push(event);
+          });
+        } catch (error) {
+          console.error(`カレンダー ${calendarId} の取得に失敗: ${error.message}`);
+        }
+      });
+      
+      // 開始時刻でソート
+      allEvents.sort((a, b) => a.startTime - b.startTime);
+      
       console.log(`複数カレンダー同期完了: ${allEvents.length}件のイベントを取得`);
       
       // スプレッドシートに書き込み
@@ -247,27 +177,31 @@ function syncCalendarData() {
       let sheet = ss.getSheetByName(outputSheet);
       if (!sheet) {
         sheet = ss.insertSheet(outputSheet);
-      } else {
-        sheet.clear();
+      }
+      
+      // A~F列のみクリア
+      const lastRow = sheet.getMaxRows();
+      if (lastRow > 0) {
+        sheet.getRange(2, 1, lastRow, 6).clear();
       }
       
       // ヘッダーとデータを書き込み
       if (allEvents.length > 0) {
-        const headers = ['タイトル', '開始日時', '終了日時', '場所', '説明', '終日', '作成者', 'カレンダーID'];
-        sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
+        const headers = ['日付', '開始時刻', '終了時刻', 'タイトル', 'コメント', 'カレンダーID'];
+        sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
         
         const data = allEvents.map(event => [
+          Utilities.formatDate(event.startTime, 'JST', 'yyyy/M/d'),
+          event.allDay ? '終日' : Utilities.formatDate(event.startTime, 'JST', 'H:mm:ss'),
+          event.allDay ? '終日' : Utilities.formatDate(event.endTime, 'JST', 'H:mm:ss'),
           event.title,
-          event.startTime,
-          event.endTime,
-          event.location || '',
           event.description || '',
-          event.allDay ? 'はい' : 'いいえ',
-          event.creators || '',
           event.calendarId
         ]);
         
         sheet.getRange(2, 1, data.length, headers.length).setValues(data);
+      } else {
+        sheet.getRange(2, 1).setValue('指定期間にイベントはありません');
       }
       
       return {
@@ -279,6 +213,42 @@ function syncCalendarData() {
     
   } catch (error) {
     console.error(`同期エラー: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * 一括実行機能（元のコードのexecuteAllに相当）
+ */
+function executeAll() {
+  try {
+    console.log('===== 処理開始 =====');
+    
+    // 1. カレンダーデータを取得してスプレッドシートに出力
+    console.log('1. カレンダーデータを取得中...');
+    const calendarResult = syncCalendarData();
+    
+    // 2. CSV出力
+    console.log('2. CSVファイルを生成中...');
+    const csvResult = downloadCsvButton();
+    
+    // 3. 施設カレンダーPDF作成
+    console.log('3. 施設カレンダーPDFファイルを生成中...');
+    // createSinglePdfButtonまたはcreateAllPdfsButtonを実行
+    
+    console.log('===== 処理完了 =====');
+    console.log(`カレンダーイベント: ${calendarResult.eventCount}件`);
+    if (csvResult) {
+      console.log(`CSVファイル: ${csvResult.fileName}`);
+    }
+    
+    return {
+      calendar: calendarResult,
+      csv: csvResult
+    };
+    
+  } catch (error) {
+    console.error('一括実行エラー:', error);
     throw error;
   }
 }

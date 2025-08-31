@@ -48,14 +48,17 @@ const CONFIG = {
   CALENDAR: {
     // カレンダーID（'primary'はデフォルトカレンダー）
     // 複数のカレンダーを使用する場合は配列で指定
-    // 例: ['primary', 'xxx@group.calendar.google.com']
-    CALENDAR_IDS: ['primary'],
+    CALENDAR_IDS: ['c_c89f5fd72defb5ef85547e43d4c019687042f5882de1ec7fdfd2edbb6e2064b4@group.calendar.google.com'],
     
     // カレンダーデータを出力するシート名
     OUTPUT_SHEET: 'カレンダーデータ',
     
-    // デフォルトの取得期間（日数）
-    DEFAULT_DAYS: 30
+    // 日付を取得するシートと範囲
+    DATE_SOURCE: {
+      SHEET_NAME: '使い方',
+      START_DATE_CELL: 'B2',  // 開始日のセル
+      END_DATE_CELL: 'B3'      // 終了日のセル
+    }
   }
 };
 
