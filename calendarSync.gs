@@ -218,37 +218,123 @@ function syncCalendarData() {
 }
 
 /**
- * 一括実行機能（元のコードのexecuteAllに相当）
+ * カレンダーデータを取得してCSVファイルを作成し、リンクをシートに貼る（ボタン用）
  */
-function executeAll() {
+function exportCalendarToCSVWithLink() {
   try {
-    console.log('===== 処理開始 =====');
+    console.log('===== カレンダーデータCSV出力処理開始 =====');
     
     // 1. カレンダーデータを取得してスプレッドシートに出力
     console.log('1. カレンダーデータを取得中...');
     const calendarResult = syncCalendarData();
     
-    // 2. CSV出力
-    console.log('2. CSVファイルを生成中...');
-    const csvResult = downloadCsvButton();
+    if (calendarResult.eventCount === 0) {
+      console.log('イベントがありませんでした');
+      return null;
+    }
     
-    // 3. 施設カレンダーPDF作成
-    console.log('3. 施設カレンダーPDFファイルを生成中...');
-    // createSinglePdfButtonまたはcreateAllPdfsButtonを実行
+    // 2. CSVシートのCSVファイルを作成
+    console.log('2. CSVファイルを生成中...');
+    
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const csvSheet = ss.getSheetByName('csv');
+    
+    if (!csvSheet) {
+      throw new Error('「csv」シートが見つかりません');
+    }
+    
+    // データが存在する最終行を取得
+    const lastRow = csvSheet.getLastRow();
+    if (lastRow === 0) {
+      console.log('csvシートにデータがありません');
+      return null;
+    }
+    
+    // A〜N列（1〜14列）のデータを取得
+    const range = csvSheet.getRange(1, 1, lastRow, 14);
+    const values = range.getValues();
+    
+    // CSV形式に変換
+    let csvContent = '';
+    values.forEach((row, index) => {
+      const csvRow = row.map((cell, colIndex) => {
+        let cellValue = cell === null || cell === undefined ? '' : String(cell);
+        
+        // A列（0）、B列（1）、C列（2）の日付・時刻データを文字列として扱う
+        if (colIndex <= 2 && cell instanceof Date) {
+          if (colIndex === 0) {
+            cellValue = Utilities.formatDate(cell, 'JST', 'yyyy/M/d');
+          } else {
+            cellValue = Utilities.formatDate(cell, 'JST', 'H:mm:ss');
+          }
+        }
+        
+        // ヘッダー行（1行目）以外は全てダブルクォートで囲む
+        if (index > 0) {
+          cellValue = cellValue.replace(/"/g, '""');
+          cellValue = `"${cellValue}"`;
+        } else {
+          // ヘッダー行でもカンマや改行、ダブルクォートを含む場合はダブルクォートで囲む
+          if (cellValue.includes(',') || cellValue.includes('\n') || cellValue.includes('\r') || cellValue.includes('"')) {
+            cellValue = cellValue.replace(/"/g, '""');
+            cellValue = `"${cellValue}"`;
+          }
+        }
+        
+        return cellValue;
+      }).join(',');
+      
+      csvContent += csvRow;
+      if (index < values.length - 1) {
+        csvContent += '\n';
+      }
+    });
+    
+    // ファイル名を生成
+    const fileName = `export_${Utilities.formatDate(new Date(), 'JST', 'yyyyMMdd_HHmmss')}.csv`;
+    
+    // UTF-8でCSVを作成
+    const blob = Utilities.newBlob(csvContent, 'text/csv', fileName);
+    
+    // Googleドライブに保存
+    const file = DriveApp.createFile(blob);
+    
+    console.log('===========================================');
+    console.log(`CSVファイルを作成しました: ${fileName}`);
+    console.log(`ファイルURL: ${file.getUrl()}`);
+    console.log(`ダウンロードURL: ${file.getDownloadUrl()}`);
+    console.log('===========================================');
+    
+    // 3. 結果を使い方シートに書き込む
+    const resultSheet = ss.getSheetByName('使い方');
+    if (resultSheet) {
+      // CSVファイル名（12行目）
+      resultSheet.getRange('B12').setValue(fileName);
+      
+      // ダウンロードリンク（13行目）
+      const richText = SpreadsheetApp.newRichTextValue()
+        .setText('📥 クリックしてダウンロード')
+        .setLinkUrl(file.getDownloadUrl())
+        .build();
+      resultSheet.getRange('B13').setRichTextValue(richText);
+      
+      // ダウンロードリンクのスタイル設定
+      resultSheet.getRange('B13').setFontColor('#1a73e8').setFontWeight('bold');
+    }
     
     console.log('===== 処理完了 =====');
     console.log(`カレンダーイベント: ${calendarResult.eventCount}件`);
-    if (csvResult) {
-      console.log(`CSVファイル: ${csvResult.fileName}`);
-    }
+    console.log(`CSVファイル: ${fileName}`);
     
     return {
-      calendar: calendarResult,
-      csv: csvResult
+      fileName: file.getName(),
+      fileUrl: file.getUrl(),
+      downloadUrl: file.getDownloadUrl(),
+      eventCount: calendarResult.eventCount
     };
     
   } catch (error) {
-    console.error('一括実行エラー:', error);
+    console.error('CSV出力エラー:', error);
     throw error;
   }
 }

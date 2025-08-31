@@ -39,21 +39,6 @@ function createAllPdfsButton() {
   }
 }
 
-/**
- * CSVダウンロード（ボタン用）
- */
-function downloadCsvButton() {
-  try {
-    // 施設データをCSV出力
-    const result = exportSheetToCsv(CONFIG.SHEETS.FACILITY_DATA);
-    console.log(`CSV作成完了: ${result.fileName}`);
-    console.log(`ダウンロードURL: ${result.downloadUrl}`);
-    return result;
-  } catch (error) {
-    console.error(`CSVエクスポートエラー: ${error.message}`);
-    throw error;
-  }
-}
 
 /**
  * テスト用：設定値の確認
