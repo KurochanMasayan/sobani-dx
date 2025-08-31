@@ -223,15 +223,62 @@ function exportCalendarToCsvFile() {
  */
 function syncCalendarData() {
   try {
-    const result = exportCalendarToSheet();
+    // 設定からカレンダーIDを取得
+    const calendarIds = CONFIG.CALENDAR.CALENDAR_IDS;
+    const outputSheet = CONFIG.CALENDAR.OUTPUT_SHEET;
     
-    SpreadsheetApp.getUi().alert(
-      '同期完了',
-      `カレンダーデータを同期しました。\n\nシート名: ${result.sheetName}\nイベント数: ${result.eventCount}件`,
-      SpreadsheetApp.getUi().ButtonSet.OK
-    );
+    // デフォルト期間を設定
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - CONFIG.CALENDAR.DEFAULT_DAYS);
+    const endDate = new Date();
+    
+    if (calendarIds.length === 1) {
+      // 単一カレンダーの場合
+      const result = exportCalendarToSheet(outputSheet, calendarIds[0], startDate, endDate);
+      console.log(`カレンダー同期完了: ${result.eventCount}件のイベントを取得`);
+      return result;
+    } else {
+      // 複数カレンダーの場合
+      const allEvents = getMultipleCalendarEvents(calendarIds, startDate, endDate);
+      console.log(`複数カレンダー同期完了: ${allEvents.length}件のイベントを取得`);
+      
+      // スプレッドシートに書き込み
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      let sheet = ss.getSheetByName(outputSheet);
+      if (!sheet) {
+        sheet = ss.insertSheet(outputSheet);
+      } else {
+        sheet.clear();
+      }
+      
+      // ヘッダーとデータを書き込み
+      if (allEvents.length > 0) {
+        const headers = ['タイトル', '開始日時', '終了日時', '場所', '説明', '終日', '作成者', 'カレンダーID'];
+        sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
+        
+        const data = allEvents.map(event => [
+          event.title,
+          event.startTime,
+          event.endTime,
+          event.location || '',
+          event.description || '',
+          event.allDay ? 'はい' : 'いいえ',
+          event.creators || '',
+          event.calendarId
+        ]);
+        
+        sheet.getRange(2, 1, data.length, headers.length).setValues(data);
+      }
+      
+      return {
+        sheetName: outputSheet,
+        eventCount: allEvents.length,
+        calendarCount: calendarIds.length
+      };
+    }
     
   } catch (error) {
-    SpreadsheetApp.getUi().alert(`同期エラー: ${error.message}`);
+    console.error(`同期エラー: ${error.message}`);
+    throw error;
   }
 }

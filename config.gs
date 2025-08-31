@@ -42,6 +42,20 @@ const CONFIG = {
     
     // 除外する施設名のパターン
     EXCLUDE_PATTERN: '個人宅'
+  },
+  
+  // Googleカレンダーの設定
+  CALENDAR: {
+    // カレンダーID（'primary'はデフォルトカレンダー）
+    // 複数のカレンダーを使用する場合は配列で指定
+    // 例: ['primary', 'xxx@group.calendar.google.com']
+    CALENDAR_IDS: ['primary'],
+    
+    // カレンダーデータを出力するシート名
+    OUTPUT_SHEET: 'カレンダーデータ',
+    
+    // デフォルトの取得期間（日数）
+    DEFAULT_DAYS: 30
   }
 };
 
