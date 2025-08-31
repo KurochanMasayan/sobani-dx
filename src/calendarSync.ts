@@ -371,9 +371,3 @@ function exportCalendarToCSVWithLink(): {
   }
 }
 
-// グローバルスコープに関数を登録（GASで実行可能にするため）
-(global as any).getDateFromSheet = getDateFromSheet;
-(global as any).getCalendarEvents = getCalendarEvents;
-(global as any).exportCalendarToSheet = exportCalendarToSheet;
-(global as any).syncCalendarData = syncCalendarData;
-(global as any).exportCalendarToCSVWithLink = exportCalendarToCSVWithLink;

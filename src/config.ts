@@ -82,6 +82,3 @@ function getPdfFolderId(): string {
   }
 }
 
-// グローバルスコープに関数を登録（GASで実行可能にするため）
-(global as any).CONFIG = CONFIG;
-(global as any).getPdfFolderId = getPdfFolderId;

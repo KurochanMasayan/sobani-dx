@@ -215,7 +215,3 @@ function createAllFacilityPdfs(): {
   };
 }
 
-// グローバルスコープに関数を登録（GASで実行可能にするため）
-(global as any).getYearMonthFromSheet = getYearMonthFromSheet;
-(global as any).createSinglePdf = createSinglePdf;
-(global as any).createAllFacilityPdfs = createAllFacilityPdfs;

@@ -140,7 +140,3 @@ function importCsvToSheet(fileId: string, targetSheetName: string, clearSheet: b
 }
 
 
-// グローバルスコープに関数を登録（GASで実行可能にするため）
-(global as any).createCsvDownload = createCsvDownload;
-(global as any).exportSheetToCsv = exportSheetToCsv;
-(global as any).importCsvToSheet = importCsvToSheet;

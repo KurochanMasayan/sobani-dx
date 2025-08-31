@@ -128,10 +128,3 @@ function testSinglePdfCreation(): void {
   }
 }
 
-// グローバルスコープに関数を登録（GASで実行可能にするため）
-(global as any).createSinglePdfButton = createSinglePdfButton;
-(global as any).createAllPdfsButton = createAllPdfsButton;
-(global as any).syncCalendarButton = syncCalendarButton;
-(global as any).exportCalendarCSVButton = exportCalendarCSVButton;
-(global as any).testConfiguration = testConfiguration;
-(global as any).testSinglePdfCreation = testSinglePdfCreation;
