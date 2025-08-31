@@ -14,7 +14,7 @@ export const CONFIG = {
     // PDF保存先のGoogle DriveフォルダID
     // フォルダIDは、Google Driveでフォルダを開いた時のURLから取得できます
     // 例: https://drive.google.com/drive/folders/XXXXX ← このXXXXXの部分
-    FOLDER_ID: 'YOUR_FOLDER_ID_HERE',
+    FOLDER_ID: '1FvHFGRSGEj29i60Wj315DZv0W2BmhPV0',
     
     // PDFエクスポート範囲
     EXPORT_RANGE: 'C1:P25',
