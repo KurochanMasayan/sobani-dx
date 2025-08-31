@@ -1,0 +1,29 @@
+# Ignore everything except the compiled JavaScript files and appsscript.json
+**/**
+!dist/**
+!appsscript.json
+!src/appsscript.json
+
+# But still ignore TypeScript declaration files
+dist/**/*.d.ts
+
+# Ignore source TypeScript files
+src/**/*.ts
+*.ts
+tsconfig.json
+
+# Ignore node modules and package files
+node_modules/**
+package.json
+package-lock.json
+
+# Ignore Git files
+.git/**
+.gitignore
+
+# Ignore clasp config files
+.clasp.json
+.clasprc.json
+
+# Ignore this file
+.claspignore
