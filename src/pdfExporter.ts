@@ -2,8 +2,6 @@
  * PDF出力機能
  */
 
-import { CONFIG, getPdfFolderId } from './config';
-
 /**
  * 施設カレンダーシートのA2セルから年月を取得
  * @param {Sheet} calendarSheet - 施設カレンダーシート
@@ -32,7 +30,7 @@ function getYearMonthFromSheet(calendarSheet: GoogleAppsScript.Spreadsheet.Sheet
  * @param {string} facilityName - 施設名
  * @return {File} 作成されたPDFファイル
  */
-export function createSinglePdf(facilityName: string): GoogleAppsScript.Drive.File {
+function createSinglePdf(facilityName: string): GoogleAppsScript.Drive.File {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const calendarSheet = ss.getSheetByName(CONFIG.SHEETS.FACILITY_CALENDAR);
   
@@ -109,7 +107,7 @@ export function createSinglePdf(facilityName: string): GoogleAppsScript.Drive.Fi
 /**
  * 全施設のPDFを作成
  */
-export function createAllFacilityPdfs(): {
+function createAllFacilityPdfs(): {
   success: Array<{
     facility: string;
     fileName: string;

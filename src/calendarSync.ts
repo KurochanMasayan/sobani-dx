@@ -2,8 +2,6 @@
  * Googleカレンダー連携機能
  */
 
-import { CONFIG } from './config';
-
 /**
  * スプレッドシートから日付を取得するヘルパー関数
  */
@@ -148,7 +146,7 @@ function exportCalendarToSheet(targetSheetName: string, calendarId: string, star
 /**
  * カレンダーデータを同期（ボタン用）
  */
-export function syncCalendarData(): {
+function syncCalendarData(): {
   sheetName: string;
   eventCount: number;
   calendarCount?: number;
@@ -249,7 +247,7 @@ export function syncCalendarData(): {
 /**
  * カレンダーデータを取得してCSVファイルを作成し、リンクをシートに貼る（ボタン用）
  */
-export function exportCalendarToCSVWithLink(): {
+function exportCalendarToCSVWithLink(): {
   fileName: string;
   fileUrl: string;
   downloadUrl: string;

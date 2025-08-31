@@ -3,10 +3,6 @@
  * メニューの作成と基本機能の管理
  */
 
-import { CONFIG, getPdfFolderId } from './config';
-import { createSinglePdf, createAllFacilityPdfs } from './pdfExporter';
-import { syncCalendarData, exportCalendarToCSVWithLink } from './calendarSync';
-
 /**
  * ボタンから実行する関数
  */

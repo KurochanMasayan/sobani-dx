@@ -2,7 +2,7 @@
  * 設定ファイル
  */
 
-export const CONFIG = {
+const CONFIG = {
   // スプレッドシートの設定
   SHEETS: {
     FACILITY_DATA: '施設データ',
@@ -66,7 +66,7 @@ export const CONFIG = {
  * PDFフォルダIDの検証と設定
  * @return {string} 有効なフォルダID
  */
-export function getPdfFolderId(): string {
+function getPdfFolderId(): string {
   const folderId = CONFIG.PDF.FOLDER_ID;
   
   if (folderId === 'YOUR_FOLDER_ID_HERE' || !folderId) {
@@ -81,3 +81,7 @@ export function getPdfFolderId(): string {
     throw new Error(`指定されたフォルダID（${folderId}）が見つかりません。正しいフォルダIDを設定してください。`);
   }
 }
+
+// グローバルスコープに関数を登録（GASで実行可能にするため）
+(global as any).CONFIG = CONFIG;
+(global as any).getPdfFolderId = getPdfFolderId;
