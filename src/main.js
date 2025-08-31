@@ -201,6 +201,100 @@ function exportCsvSheetToFile() {
 }
 
 
+// スプレッドシートをPDFとしてエクスポートする関数
+function exportSpreadsheetToPDF() {
+  try {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const spreadsheetId = spreadsheet.getId();
+    
+    // 使い方シートから設定を取得
+    const usageSheet = spreadsheet.getSheetByName('使い方');
+    let sheetName = 'カレンダーデータ';
+    
+    if (usageSheet) {
+      const customSheetName = usageSheet.getRange('B5').getValue();
+      if (customSheetName) {
+        sheetName = customSheetName;
+      }
+    }
+    
+    const targetSheet = spreadsheet.getSheetByName(sheetName);
+    if (!targetSheet) {
+      throw new Error(`「${sheetName}」シートが見つかりません`);
+    }
+    
+    const sheetId = targetSheet.getSheetId();
+    
+    // PDFエクスポートのパラメータ
+    const params = {
+      'format': 'pdf',
+      'size': 'A4',
+      'portrait': true,
+      'fitw': true,
+      'sheetnames': false,
+      'printtitle': false,
+      'pagenumbers': false,
+      'gridlines': true,
+      'fzr': false,
+      'gid': sheetId
+    };
+    
+    // URLパラメータを作成
+    const queryString = Object.entries(params)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('&');
+    
+    // PDFエクスポートURL
+    const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?${queryString}`;
+    
+    // PDFを取得
+    const response = UrlFetchApp.fetch(url, {
+      headers: {
+        'Authorization': 'Bearer ' + ScriptApp.getOAuthToken()
+      }
+    });
+    
+    // ファイル名を生成
+    const fileName = `${sheetName}_${Utilities.formatDate(new Date(), 'JST', 'yyyyMMdd_HHmmss')}.pdf`;
+    
+    // PDFをDriveに保存
+    const blob = response.getBlob().setName(fileName);
+    const file = DriveApp.createFile(blob);
+    
+    console.log('===========================================');
+    console.log(`PDFファイルを作成しました: ${fileName}`);
+    console.log(`ファイルURL: ${file.getUrl()}`);
+    console.log(`ダウンロードURL: ${file.getDownloadUrl()}`);
+    console.log('===========================================');
+    
+    // 結果を使い方シートに書き込む
+    if (usageSheet) {
+      // PDFファイル名（15行目）
+      usageSheet.getRange('B15').setValue(fileName);
+      
+      // ダウンロードリンク（16行目）
+      const richText = SpreadsheetApp.newRichTextValue()
+        .setText('📄 PDFをダウンロード')
+        .setLinkUrl(file.getDownloadUrl())
+        .build();
+      usageSheet.getRange('B16').setRichTextValue(richText);
+      
+      // ダウンロードリンクのスタイル設定
+      usageSheet.getRange('B16').setFontColor('#d93025').setFontWeight('bold');
+    }
+    
+    return {
+      fileName: file.getName(),
+      fileUrl: file.getUrl(),
+      downloadUrl: file.getDownloadUrl()
+    };
+    
+  } catch (error) {
+    console.error('PDF出力エラー:', error);
+    throw error;
+  }
+}
+
 // カレンダー取得とCSV出力を一括実行する関数
 function executeAll() {
   try {
@@ -212,13 +306,22 @@ function executeAll() {
     
     // 2. CSVファイルを生成
     console.log('2. CSVファイルを生成中...');
-    const result = exportCsvSheetToFile();
+    const csvResult = exportCsvSheetToFile();
+    
+    // 3. PDFファイルを生成
+    console.log('3. PDFファイルを生成中...');
+    const pdfResult = exportSpreadsheetToPDF();
     
     console.log('===== 処理完了 =====');
     console.log('CSVファイルのダウンロードURL:');
-    console.log(result.downloadUrl);
+    console.log(csvResult.downloadUrl);
+    console.log('PDFファイルのダウンロードURL:');
+    console.log(pdfResult.downloadUrl);
     
-    return result;
+    return {
+      csv: csvResult,
+      pdf: pdfResult
+    };
     
   } catch (error) {
     console.error('一括実行エラー:', error);
