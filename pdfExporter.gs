@@ -3,13 +3,25 @@
  */
 
 /**
- * 現在の年月を取得
+ * 施設カレンダーシートのA2セルから年月を取得
+ * @param {Sheet} calendarSheet - 施設カレンダーシート
  * @return {string} YYYY年MM月形式の文字列
  */
-function getCurrentYearMonth() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
+function getYearMonthFromSheet(calendarSheet) {
+  const dateValue = calendarSheet.getRange('A2').getValue();
+  
+  if (!dateValue) {
+    // A2セルに日付がない場合は現在の年月を使用
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    return `${year}年${month}月`;
+  }
+  
+  // 日付から年月を取得
+  const date = new Date(dateValue);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
   return `${year}年${month}月`;
 }
 
@@ -30,8 +42,8 @@ function createSinglePdf(facilityName) {
   calendarSheet.getRange(CONFIG.FACILITY.NAME_CELL).setValue(facilityName);
   SpreadsheetApp.flush(); // 変更を即座に反映
   
-  // PDFファイル名を作成
-  const yearMonth = getCurrentYearMonth();
+  // A2セルから年月を取得してPDFファイル名を作成
+  const yearMonth = getYearMonthFromSheet(calendarSheet);
   const fileName = `${facilityName}_${yearMonth}.pdf`;
   
   // PDFエクスポートのURL構築
