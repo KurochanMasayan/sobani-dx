@@ -69,11 +69,20 @@ function createSinglePdf(facilityName) {
   const folderId = getPdfFolderId();
   const folder = DriveApp.getFolderById(folderId);
   
-  // 既存の同名ファイルを削除
-  const existingFiles = folder.getFilesByName(fileName);
-  while (existingFiles.hasNext()) {
-    const file = existingFiles.next();
-    file.setTrashed(true);
+  // 同じ施設の過去のPDFファイルをすべて削除
+  // ファイル名のパターン: 施設名_YYYY年MM月.pdf
+  const searchPattern = `${facilityName}_`;
+  const allFiles = folder.getFiles();
+  
+  while (allFiles.hasNext()) {
+    const file = allFiles.next();
+    const existingFileName = file.getName();
+    
+    // 同じ施設名で始まり、.pdfで終わるファイルを削除
+    if (existingFileName.startsWith(searchPattern) && existingFileName.endsWith('.pdf')) {
+      console.log(`削除: ${existingFileName}`);
+      file.setTrashed(true);
+    }
   }
   
   // 新しいPDFを保存
