@@ -39,6 +39,43 @@ function createAllPdfsButton() {
   }
 }
 
+/**
+ * カレンダーデータ同期（ボタン用）
+ */
+function syncCalendarButton() {
+  try {
+    console.log('カレンダーデータの同期を開始します...');
+    const result = syncCalendarData();
+    console.log(`同期完了: ${result.eventCount}件のイベントを取得`);
+    return result;
+  } catch (error) {
+    console.error(`カレンダー同期エラー: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * カレンダーデータをCSV出力してリンクを貼る（ボタン用）
+ */
+function exportCalendarCSVButton() {
+  try {
+    console.log('カレンダーデータのCSV出力を開始します...');
+    const result = exportCalendarToCSVWithLink();
+    
+    if (result) {
+      console.log(`CSV出力完了: ${result.fileName}`);
+      console.log(`イベント数: ${result.eventCount}件`);
+    } else {
+      console.log('CSVデータがありません');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error(`CSV出力エラー: ${error.message}`);
+    throw error;
+  }
+}
+
 
 /**
  * テスト用：設定値の確認
