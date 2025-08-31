@@ -12,11 +12,28 @@
  */
 function createSinglePdfButton() {
   try {
-    const facilityName = '施設A'; // ここを適切に変更するか、別途入力を受け付ける
+    // 施設カレンダーシートのA5セルから施設名を取得
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const calendarSheet = ss.getSheetByName(CONFIG.SHEETS.FACILITY_CALENDAR);
+    
+    if (!calendarSheet) {
+      throw new Error(`シート「${CONFIG.SHEETS.FACILITY_CALENDAR}」が見つかりません`);
+    }
+    
+    const facilityName = calendarSheet.getRange(CONFIG.FACILITY.NAME_CELL).getValue();
+    
+    if (!facilityName) {
+      throw new Error(`${CONFIG.SHEETS.FACILITY_CALENDAR}シートの${CONFIG.FACILITY.NAME_CELL}セルに施設名が設定されていません`);
+    }
+    
+    console.log(`施設名「${facilityName}」のPDFを作成します`);
     const pdfFile = createSinglePdf(facilityName);
     console.log(`PDF作成完了: ${pdfFile.getName()}`);
+    
+    return pdfFile;
   } catch (error) {
     console.error(`PDF作成エラー: ${error.message}`);
+    throw error;
   }
 }
 
