@@ -42,10 +42,8 @@ function getCalendarEvents(calendarId: string, startDate: Date, endDate: Date): 
   title: string;
   startTime: Date;
   endTime: Date;
-  location: string;
   description: string;
   allDay: boolean;
-  creators: string;
   id: string;
   calendarId?: string;
 }> {
@@ -63,13 +61,11 @@ function getCalendarEvents(calendarId: string, startDate: Date, endDate: Date): 
     // イベントデータを整形
     const eventData = events.map(event => {
       return {
-        title: event.getTitle(),
+        title: event.getTitle().replace(/[\r\n\t]/g, ' '),
         startTime: event.getStartTime() as Date,
         endTime: event.getEndTime() as Date,
-        location: event.getLocation(),
-        description: event.getDescription(),
+        description: event.getDescription().replace(/[\r\n\t]/g, ' '),
         allDay: event.isAllDayEvent(),
-        creators: event.getCreators().join(', '),
         id: event.getId()
       };
     });
@@ -174,10 +170,8 @@ function syncCalendarData(): {
         title: string;
         startTime: Date;
         endTime: Date;
-        location: string;
         description: string;
         allDay: boolean;
-        creators: string;
         id: string;
         calendarId?: string;
       }> = [];
