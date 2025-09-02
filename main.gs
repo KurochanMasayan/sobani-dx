@@ -10,7 +10,7 @@
 /**
  * 単一施設のPDF作成（ボタン用）
  */
-function createSinglePdfButton(): GoogleAppsScript.Drive.File {
+function createSinglePdfButton() {
   try {
     // 施設カレンダーシートのA5セルから施設名を取得
     const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -31,7 +31,7 @@ function createSinglePdfButton(): GoogleAppsScript.Drive.File {
     console.log(`PDF作成完了: ${pdfFile.getName()}`);
     
     return pdfFile;
-  } catch (error: any) {
+  } catch (error) {
     console.error(`PDF作成エラー: ${error.message}`);
     throw error;
   }
@@ -40,7 +40,7 @@ function createSinglePdfButton(): GoogleAppsScript.Drive.File {
 /**
  * 全施設のPDF作成（ボタン用）
  */
-function createAllPdfsButton(): any {
+function createAllPdfsButton() {
   try {
     console.log('全施設のPDF作成を開始します...');
     const results = createAllFacilityPdfs();
@@ -50,7 +50,7 @@ function createAllPdfsButton(): any {
     console.log(`失敗: ${results.summary.failed}件`);
     
     return results;
-  } catch (error: any) {
+  } catch (error) {
     console.error(`PDF一括作成エラー: ${error.message}`);
     throw error;
   }
@@ -59,13 +59,13 @@ function createAllPdfsButton(): any {
 /**
  * カレンダーデータ同期（ボタン用）
  */
-function syncCalendarButton(): any {
+function syncCalendarButton() {
   try {
     console.log('カレンダーデータの同期を開始します...');
     const result = syncCalendarData();
     console.log(`同期完了: ${result.eventCount}件のイベントを取得`);
     return result;
-  } catch (error: any) {
+  } catch (error) {
     console.error(`カレンダー同期エラー: ${error.message}`);
     throw error;
   }
@@ -74,7 +74,7 @@ function syncCalendarButton(): any {
 /**
  * カレンダーデータをCSV出力してリンクを貼る（ボタン用）
  */
-function exportCalendarCSVButton(): any {
+function exportCalendarCSVButton() {
   try {
     console.log('カレンダーデータのCSV出力を開始します...');
     const result = exportCalendarToCSVWithLink();
@@ -87,7 +87,7 @@ function exportCalendarCSVButton(): any {
     }
     
     return result;
-  } catch (error: any) {
+  } catch (error) {
     console.error(`CSV出力エラー: ${error.message}`);
     throw error;
   }
@@ -97,7 +97,7 @@ function exportCalendarCSVButton(): any {
 /**
  * テスト用：設定値の確認
  */
-function testConfiguration(): void {
+function testConfiguration() {
   console.log('=== 設定確認 ===');
   console.log('施設データシート:', CONFIG.SHEETS.FACILITY_DATA);
   console.log('施設カレンダーシート:', CONFIG.SHEETS.FACILITY_CALENDAR);
@@ -110,7 +110,7 @@ function testConfiguration(): void {
     console.log('PDF保存先フォルダID:', folderId);
     const folder = DriveApp.getFolderById(folderId);
     console.log('PDF保存先フォルダ名:', folder.getName());
-  } catch (error: any) {
+  } catch (error) {
     console.error('PDF保存先エラー:', error.message);
   }
 }
@@ -118,12 +118,12 @@ function testConfiguration(): void {
 /**
  * テスト用：単一施設のPDF作成テスト
  */
-function testSinglePdfCreation(): void {
+function testSinglePdfCreation() {
   const testFacilityName = 'テスト施設';
   try {
     const result = createSinglePdf(testFacilityName);
     console.log('テストPDF作成成功:', result.getName());
-  } catch (error: any) {
+  } catch (error) {
     console.error('テストPDF作成失敗:', error.message);
   }
 }

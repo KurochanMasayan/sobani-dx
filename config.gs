@@ -14,15 +14,15 @@ const CONFIG = {
     // PDF保存先のGoogle DriveフォルダID
     // フォルダIDは、Google Driveでフォルダを開いた時のURLから取得できます
     // 例: https://drive.google.com/drive/folders/XXXXX ← このXXXXXの部分
-    FOLDER_ID: '1FvHFGRSGEj29i60Wj315DZv0W2BmhPV0',
+    FOLDER_ID: 'YOUR_FOLDER_ID_HERE',
     
     // PDFエクスポート範囲
     EXPORT_RANGE: 'C1:P25',
     
     // PDFの設定
-    ORIENTATION: 'landscape' as const, // 横向き
-    SIZE: 'A4' as const,
-    SCALE: 'fit' as const, // ページに合わせる
+    ORIENTATION: 'landscape', // 横向き
+    SIZE: 'A4',
+    SCALE: 'fit', // ページに合わせる
     MARGINS: {
       top: 0.5,
       bottom: 0.5,
@@ -66,7 +66,7 @@ const CONFIG = {
  * PDFフォルダIDの検証と設定
  * @return {string} 有効なフォルダID
  */
-function getPdfFolderId(): string {
+function getPdfFolderId() {
   const folderId = CONFIG.PDF.FOLDER_ID;
   
   if (folderId === 'YOUR_FOLDER_ID_HERE' || !folderId) {
@@ -75,7 +75,7 @@ function getPdfFolderId(): string {
   
   // フォルダの存在確認
   try {
-    DriveApp.getFolderById(folderId);
+    const folder = DriveApp.getFolderById(folderId);
     return folderId;
   } catch (e) {
     throw new Error(`指定されたフォルダID（${folderId}）が見つかりません。正しいフォルダIDを設定してください。`);
