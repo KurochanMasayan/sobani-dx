@@ -5,7 +5,6 @@
 const CONFIG = {
   // スプレッドシートの設定
   SHEETS: {
-    FACILITY_DATA: '施設データ',
     FACILITY_CALENDAR: '施設カレンダー'
   },
   
@@ -36,12 +35,17 @@ const CONFIG = {
     // 施設名を取得するセル（施設カレンダーシート）
     NAME_CELL: 'A5',
     
-    // 施設データシートの施設名列の開始位置
-    DATA_START_ROW: 2,
-    DATA_COLUMN: 'D',
-    
-    // 除外する施設名のパターン
-    EXCLUDE_PATTERN: '個人宅'
+    // 施設別訪問一覧から施設データを取得する際の設定
+    VISIT_LIST: {
+      // シート名
+      SHEET_NAME: '施設別訪問一覧',
+      // データ開始行（A3から）
+      START_ROW: 3,
+      // データ列（A列）
+      DATA_COLUMN: 1,
+      // スキップする値のパターン
+      SKIP_PATTERNS: ['【関数】', '施設名']
+    }
   },
   
   // Googleカレンダーの設定

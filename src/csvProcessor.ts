@@ -138,5 +138,3 @@ function importCsvToSheet(fileId: string, targetSheetName: string, clearSheet: b
     throw error;
   }
 }
-
-
