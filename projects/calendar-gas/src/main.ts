@@ -78,17 +78,18 @@ function exportCalendarCSVButton(): any {
   try {
     console.log('カレンダーデータのCSV出力を開始します...');
     const result = exportCalendarToCSVWithLink();
-    
+
     if (result) {
       console.log(`CSV出力完了: ${result.fileName}`);
       console.log(`イベント数: ${result.eventCount}件`);
     } else {
       console.log('CSVデータがありません');
     }
-    
+
     return result;
   } catch (error: any) {
     console.error(`CSV出力エラー: ${error.message}`);
     throw error;
   }
 }
+

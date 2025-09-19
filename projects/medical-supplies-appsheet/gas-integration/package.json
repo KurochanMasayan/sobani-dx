@@ -1,0 +1,25 @@
+{
+  "name": "medical-supplies-gas-integration",
+  "version": "1.0.0",
+  "description": "医療用品管理システム用 Google Apps Script統合機能",
+  "private": true,
+  "scripts": {
+    "build": "npx tsc",
+    "push": "npm run build && npx clasp push",
+    "watch": "npx tsc --watch"
+  },
+  "keywords": [
+    "google-apps-script",
+    "medical-supplies",
+    "csv-export",
+    "appsheet",
+    "typescript"
+  ],
+  "author": "sobani development team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/google-apps-script": "^1.0.0",
+    "typescript": "^5.0.0",
+    "@google/clasp": "^2.4.0"
+  }
+}
