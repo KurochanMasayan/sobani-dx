@@ -1,0 +1,165 @@
+{
+  "tableName": "inventory",
+  "displayName": "在庫管理",
+  "description": "医材の在庫状況をロット単位で管理するテーブル",
+  "columns": [
+    {
+      "name": "inventory_id",
+      "type": "Text",
+      "displayName": "在庫ID",
+      "required": true,
+      "key": true,
+      "initialValue": "CONCATENATE(\"INV\", TEXT(ROW(), \"000\"))",
+      "editable": false,
+      "description": "在庫レコードの一意識別子"
+    },
+    {
+      "name": "supply_id",
+      "type": "Ref",
+      "displayName": "医材ID",
+      "required": true,
+      "referencedTable": "supplies",
+      "referencedColumn": "supply_id",
+      "description": "医材マスタへの参照"
+    },
+    {
+      "name": "current_stock",
+      "type": "Number",
+      "displayName": "現在庫数",
+      "required": true,
+      "initialValue": "0",
+      "description": "実際の在庫数量"
+    },
+    {
+      "name": "allocated_stock",
+      "type": "Number",
+      "displayName": "引当済在庫",
+      "required": false,
+      "initialValue": "0",
+      "description": "予約済みの在庫数量"
+    },
+    {
+      "name": "available_stock",
+      "type": "Number",
+      "displayName": "利用可能在庫",
+      "required": true,
+      "formula": "[current_stock] - [allocated_stock]",
+      "description": "実際に使用可能な在庫数量"
+    },
+    {
+      "name": "lot_number",
+      "type": "Text",
+      "displayName": "ロット番号",
+      "required": false,
+      "description": "製造ロット番号"
+    },
+    {
+      "name": "expiry_date",
+      "type": "Date",
+      "displayName": "有効期限",
+      "required": false,
+      "description": "有効期限（該当する場合）"
+    },
+    {
+      "name": "location",
+      "type": "Text",
+      "displayName": "保管場所",
+      "required": false,
+      "description": "具体的な保管場所"
+    },
+    {
+      "name": "last_updated",
+      "type": "DateTime",
+      "displayName": "最終更新日時",
+      "required": true,
+      "resetOnEdit": "NOW()",
+      "description": "在庫情報の最終更新日時"
+    },
+    {
+      "name": "updated_by",
+      "type": "Text",
+      "displayName": "更新者",
+      "required": true,
+      "initialValue": "USEREMAIL()",
+      "resetOnEdit": "USEREMAIL()",
+      "description": "在庫情報を更新したユーザー"
+    }
+  ],
+  "virtualColumns": [
+    {
+      "name": "supply_name",
+      "type": "Text",
+      "displayName": "医材名",
+      "formula": "LOOKUP([supply_id], \"supplies\", \"supply_id\", \"supply_name\")",
+      "description": "医材マスタから取得する医材名"
+    },
+    {
+      "name": "unit",
+      "type": "Text",
+      "displayName": "単位",
+      "formula": "LOOKUP([supply_id], \"supplies\", \"supply_id\", \"unit\")",
+      "description": "医材マスタから取得する単位"
+    },
+    {
+      "name": "days_to_expiry",
+      "type": "Number",
+      "displayName": "期限までの日数",
+      "formula": "IF(ISBLANK([expiry_date]), \"\", [expiry_date] - TODAY())",
+      "description": "有効期限までの残り日数"
+    },
+    {
+      "name": "expiry_status",
+      "type": "Text",
+      "displayName": "期限ステータス",
+      "formula": "IF(ISBLANK([expiry_date]), \"期限なし\", IF([days_to_expiry] < 0, \"期限切れ\", IF([days_to_expiry] <= 30, \"期限間近\", \"正常\")))",
+      "description": "有効期限の状況判定"
+    },
+    {
+      "name": "stock_alert",
+      "type": "Boolean",
+      "displayName": "在庫アラート",
+      "formula": "[current_stock] <= LOOKUP([supply_id], \"supplies\", \"supply_id\", \"safety_stock\")",
+      "description": "安全在庫を下回っているかどうか"
+    }
+  ],
+  "validationRules": [
+    {
+      "condition": "[current_stock] >= 0",
+      "message": "現在庫数は0以上である必要があります"
+    },
+    {
+      "condition": "[allocated_stock] >= 0",
+      "message": "引当済在庫は0以上である必要があります"
+    },
+    {
+      "condition": "[allocated_stock] <= [current_stock]",
+      "message": "引当済在庫は現在庫数を超えることはできません"
+    }
+  ],
+  "security": {
+    "readPermission": "ROLE_USER",
+    "writePermission": "ROLE_MANAGER",
+    "deletePermission": "ROLE_ADMIN"
+  },
+  "formatting": {
+    "summaryColumn": "[supply_name] & \" (\" & [current_stock] & [unit] & \")\"",
+    "sortBy": "supply_name"
+  },
+  "filters": [
+    {
+      "name": "active_stock",
+      "condition": "[current_stock] > 0",
+      "description": "在庫のある医材のみ表示"
+    },
+    {
+      "name": "low_stock",
+      "condition": "[stock_alert] = TRUE",
+      "description": "在庫不足の医材のみ表示"
+    },
+    {
+      "name": "expiring_soon",
+      "condition": "AND(NOT(ISBLANK([expiry_date])), [days_to_expiry] <= 30, [days_to_expiry] >= 0)",
+      "description": "30日以内に期限切れになる医材のみ表示"
+    }
+  ]
+}
