@@ -1,3 +1,9 @@
+# 元データ（ソースデータ）
+元data/
+元データ/
+**/元data/
+**/元データ/
+
 # Dependencies
 node_modules/
 npm-debug.log*

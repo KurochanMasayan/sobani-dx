@@ -1,21 +1,43 @@
 {
-  "name": "vk-020e-clasp",
+  "name": "sobani-workspace",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "多目的プロジェクト管理ワークスペース",
+  "private": true,
+  "workspaces": [
+    "projects/*"
+  ],
   "scripts": {
-    "build": "tsc",
-    "push": "npm run build && clasp push",
-    "watch": "tsc --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "calendar:build": "cd projects/calendar-gas && npm run build",
+    "calendar:push": "cd projects/calendar-gas && npm run push",
+    "calendar:watch": "cd projects/calendar-gas && npm run watch",
+    "medical:setup": "cd projects/medical-supplies-appsheet && bash scripts/setup.sh",
+    "medical:backup": "cd projects/medical-supplies-appsheet && bash scripts/backup.sh",
+    "medical:deploy": "cd projects/medical-supplies-appsheet && bash scripts/deploy.sh",
+    "install:all": "npm install && npm run install:calendar",
+    "install:calendar": "cd projects/calendar-gas && npm install",
+    "build:all": "npm run calendar:build",
+    "lint:all": "echo 'Linting all projects...' && npm run lint:calendar",
+    "lint:calendar": "cd projects/calendar-gas && npm run lint || echo 'No lint script found'",
+    "clean": "rm -rf node_modules && rm -rf projects/*/node_modules"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "keywords": [
+    "google-apps-script",
+    "appsheet",
+    "medical-supplies",
+    "calendar-sync",
+    "typescript"
+  ],
+  "author": "sobani development team",
+  "license": "MIT",
   "devDependencies": {
-    "@google/clasp": "^2.4.2",
-    "@types/google-apps-script": "^2.0.0",
-    "typescript": "^5.9.2"
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
   }
 }

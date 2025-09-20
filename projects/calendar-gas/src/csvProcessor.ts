@@ -102,41 +102,39 @@ function importCsvToSheet(fileId: string, targetSheetName: string, clearSheet: b
     // ファイルを取得
     const file = DriveApp.getFileById(fileId);
     const csvData = file.getBlob().getDataAsString('UTF-8');
-    
+
     // CSVをパース
     const parsedData = Utilities.parseCsv(csvData);
-    
+
     if (!parsedData || parsedData.length === 0) {
       throw new Error('CSVデータが空です。');
     }
-    
+
     // シートを取得または作成
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     let sheet = ss.getSheetByName(targetSheetName);
-    
+
     if (!sheet) {
       sheet = ss.insertSheet(targetSheetName);
     } else if (clearSheet) {
       sheet.clear();
     }
-    
+
     // データを書き込み
     const range = sheet.getRange(1, 1, parsedData.length, parsedData[0].length);
     range.setValues(parsedData);
-    
+
     console.log(`CSVインポート完了: ${parsedData.length}行を「${targetSheetName}」シートに書き込みました。`);
-    
+
     return {
       success: true,
       rowCount: parsedData.length,
       columnCount: parsedData[0].length,
       sheetName: targetSheetName
     };
-    
+
   } catch (error: any) {
     console.error(`CSVインポートエラー: ${error.message}`);
     throw error;
   }
 }
-
-

@@ -78,14 +78,14 @@ function exportCalendarCSVButton(): any {
   try {
     console.log('カレンダーデータのCSV出力を開始します...');
     const result = exportCalendarToCSVWithLink();
-    
+
     if (result) {
       console.log(`CSV出力完了: ${result.fileName}`);
       console.log(`イベント数: ${result.eventCount}件`);
     } else {
       console.log('CSVデータがありません');
     }
-    
+
     return result;
   } catch (error: any) {
     console.error(`CSV出力エラー: ${error.message}`);
@@ -93,37 +93,3 @@ function exportCalendarCSVButton(): any {
   }
 }
 
-
-/**
- * テスト用：設定値の確認
- */
-function testConfiguration(): void {
-  console.log('=== 設定確認 ===');
-  console.log('施設データシート:', CONFIG.SHEETS.FACILITY_DATA);
-  console.log('施設カレンダーシート:', CONFIG.SHEETS.FACILITY_CALENDAR);
-  console.log('PDF出力範囲:', CONFIG.PDF.EXPORT_RANGE);
-  console.log('PDFサイズ:', CONFIG.PDF.SIZE);
-  console.log('PDF向き:', CONFIG.PDF.ORIENTATION);
-  
-  try {
-    const folderId = getPdfFolderId();
-    console.log('PDF保存先フォルダID:', folderId);
-    const folder = DriveApp.getFolderById(folderId);
-    console.log('PDF保存先フォルダ名:', folder.getName());
-  } catch (error: any) {
-    console.error('PDF保存先エラー:', error.message);
-  }
-}
-
-/**
- * テスト用：単一施設のPDF作成テスト
- */
-function testSinglePdfCreation(): void {
-  const testFacilityName = 'テスト施設';
-  try {
-    const result = createSinglePdf(testFacilityName);
-    console.log('テストPDF作成成功:', result.getName());
-  } catch (error: any) {
-    console.error('テストPDF作成失敗:', error.message);
-  }
-}
