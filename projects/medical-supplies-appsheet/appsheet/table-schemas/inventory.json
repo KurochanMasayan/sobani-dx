@@ -1,5 +1,5 @@
 {
-  "tableName": "inventory",
+  "tableName": "在庫管理",
   "displayName": "在庫管理",
   "description": "医材の在庫状況をロット単位で管理するテーブル",
   "columns": [
@@ -18,33 +18,41 @@
       "type": "Ref",
       "displayName": "医材ID",
       "required": true,
-      "referencedTable": "supplies",
+      "referencedTable": "商品マスタ",
       "referencedColumn": "supply_id",
-      "description": "医材マスタへの参照"
+      "description": "商品マスタへの参照"
     },
     {
-      "name": "current_stock",
+      "name": "stock_boxes",
       "type": "Number",
-      "displayName": "現在庫数",
+      "displayName": "在庫箱数",
       "required": true,
       "initialValue": "0",
-      "description": "実際の在庫数量"
+      "description": "実在する在庫の箱数"
     },
     {
-      "name": "allocated_stock",
+      "name": "stock_pieces",
       "type": "Number",
-      "displayName": "引当済在庫",
+      "displayName": "在庫個数",
       "required": false,
       "initialValue": "0",
-      "description": "予約済みの在庫数量"
+      "description": "箱に満たない端数の在庫個数"
     },
     {
-      "name": "available_stock",
+      "name": "allocated_boxes",
       "type": "Number",
-      "displayName": "利用可能在庫",
+      "displayName": "引当済在庫(箱)",
+      "required": false,
+      "initialValue": "0",
+      "description": "予約済みの在庫箱数"
+    },
+    {
+      "name": "available_boxes",
+      "type": "Number",
+      "displayName": "利用可能在庫(箱)",
       "required": true,
-      "formula": "[current_stock] - [allocated_stock]",
-      "description": "実際に使用可能な在庫数量"
+      "formula": "[stock_boxes] - [allocated_boxes]",
+      "description": "利用可能な在庫箱数"
     },
     {
       "name": "lot_number",
@@ -90,15 +98,29 @@
       "name": "supply_name",
       "type": "Text",
       "displayName": "医材名",
-      "formula": "LOOKUP([supply_id], \"supplies\", \"supply_id\", \"supply_name\")",
-      "description": "医材マスタから取得する医材名"
+      "formula": "LOOKUP([supply_id], \"商品マスタ\", \"supply_id\", \"supply_name\")",
+      "description": "商品マスタから取得する医材名"
     },
     {
       "name": "unit",
       "type": "Text",
       "displayName": "単位",
-      "formula": "LOOKUP([supply_id], \"supplies\", \"supply_id\", \"unit\")",
-      "description": "医材マスタから取得する単位"
+      "formula": "LOOKUP([supply_id], \"商品マスタ\", \"supply_id\", \"unit\")",
+      "description": "商品マスタから取得する単位"
+    },
+    {
+      "name": "pieces_per_box",
+      "type": "Number",
+      "displayName": "箱入数",
+      "formula": "LOOKUP([supply_id], \"商品マスタ\", \"supply_id\", \"pieces_per_box\")",
+      "description": "1箱あたりの個数"
+    },
+    {
+      "name": "total_stock_pieces",
+      "type": "Number",
+      "displayName": "在庫合計個数",
+      "formula": "([stock_boxes] * [pieces_per_box]) + [stock_pieces]",
+      "description": "箱数と端数を合わせた総個数"
     },
     {
       "name": "days_to_expiry",
@@ -113,27 +135,24 @@
       "displayName": "期限ステータス",
       "formula": "IF(ISBLANK([expiry_date]), \"期限なし\", IF([days_to_expiry] < 0, \"期限切れ\", IF([days_to_expiry] <= 30, \"期限間近\", \"正常\")))",
       "description": "有効期限の状況判定"
-    },
-    {
-      "name": "stock_alert",
-      "type": "Boolean",
-      "displayName": "在庫アラート",
-      "formula": "[current_stock] <= LOOKUP([supply_id], \"supplies\", \"supply_id\", \"safety_stock\")",
-      "description": "安全在庫を下回っているかどうか"
     }
   ],
   "validationRules": [
     {
-      "condition": "[current_stock] >= 0",
-      "message": "現在庫数は0以上である必要があります"
+      "condition": "[stock_boxes] >= 0",
+      "message": "在庫箱数は0以上である必要があります"
     },
     {
-      "condition": "[allocated_stock] >= 0",
+      "condition": "[stock_pieces] >= 0",
+      "message": "在庫個数は0以上である必要があります"
+    },
+    {
+      "condition": "[allocated_boxes] >= 0",
       "message": "引当済在庫は0以上である必要があります"
     },
     {
-      "condition": "[allocated_stock] <= [current_stock]",
-      "message": "引当済在庫は現在庫数を超えることはできません"
+      "condition": "[allocated_boxes] <= [stock_boxes]",
+      "message": "引当済在庫は在庫箱数を超えることはできません"
     }
   ],
   "security": {
@@ -142,19 +161,14 @@
     "deletePermission": "ROLE_ADMIN"
   },
   "formatting": {
-    "summaryColumn": "[supply_name] & \" (\" & [current_stock] & [unit] & \")\"",
+    "summaryColumn": "supply_name",
     "sortBy": "supply_name"
   },
   "filters": [
     {
       "name": "active_stock",
-      "condition": "[current_stock] > 0",
+      "condition": "OR([stock_boxes] > 0, [stock_pieces] > 0)",
       "description": "在庫のある医材のみ表示"
-    },
-    {
-      "name": "low_stock",
-      "condition": "[stock_alert] = TRUE",
-      "description": "在庫不足の医材のみ表示"
     },
     {
       "name": "expiring_soon",

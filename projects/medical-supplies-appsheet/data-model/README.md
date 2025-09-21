@@ -11,13 +11,14 @@ data-model/
 │   ├── 00_システム概要.md   # システム全体の概要
 │   ├── 01_施設マスタ.md    # facilities テーブル定義
 │   ├── 02_患者マスタ.md    # patients テーブル定義
-│   ├── 03_商品マスタ.md    # products テーブル定義
-│   ├── 04_発注先マスタ.md  # suppliers テーブル定義
-│   ├── 05_配布テンプレート.md # distribution_templates テーブル定義
-│   ├── 06_在庫管理.md      # inventory テーブル定義
-│   ├── 07_配布記録.md      # distribution_records テーブル定義
-│   ├── 08_発注管理.md      # purchase_orders テーブル定義
-│   └── 09_在庫変動履歴.md  # inventory_transactions テーブル定義
+│   ├── 03_商品マスタ.md    # 商品マスタ テーブル定義
+│   ├── 04_発注先マスタ.md  # 発注先マスタ テーブル定義
+│   ├── 05_配布テンプレート.md # 配布テンプレート テーブル定義
+│   ├── 06_在庫管理.md      # 在庫管理 テーブル定義
+│   ├── 07_配布記録.md      # 配布記録 テーブル定義
+│   ├── 08_発注管理.md      # 発注管理 テーブル定義
+│   ├── 09_在庫変動履歴.md  # 在庫変動履歴 テーブル定義
+│   └── 11_入荷管理.md      # 入荷管理 テーブル定義
 └── csv-data/              # CSVデータファイル（実データ格納用）
 ```
 
@@ -25,15 +26,16 @@ data-model/
 
 | テーブル名 | 説明 | 主キー |
 |-----------|------|--------|
-| facilities | 施設マスタ | facility_id |
-| patients | 患者マスタ | patient_id |
-| products | 商品マスタ | product_id |
-| suppliers | 発注先マスタ | supplier_id |
-| distribution_templates | 配布テンプレート | template_id |
-| inventory | 在庫管理 | product_id |
-| distribution_records | 配布記録 | distribution_id |
-| purchase_orders | 発注管理 | order_id |
-| inventory_transactions | 在庫変動履歴 | transaction_id |
+| 施設マスタ | 施設マスタ | facility_id |
+| 患者マスタ | 患者マスタ | patient_id |
+| 商品マスタ | 医材マスタ | supply_id |
+| 発注先マスタ | 発注先マスタ | supplier_id |
+| 配布テンプレート | 配布テンプレート | template_id |
+| 在庫管理 | 在庫管理 | inventory_id |
+| 配布記録 | 配布記録 | distribution_id |
+| 発注管理 | 発注管理 | order_id |
+| 入荷管理 | 入荷管理 | receipt_id |
+| 在庫変動履歴 | 在庫変動履歴 | transaction_id |
 
 ## 主要機能
 
@@ -42,8 +44,9 @@ data-model/
 3. **配布テンプレート管理**: 患者別の定期配布パターン管理（偶数月・奇数月対応）
 4. **医材配布記録**: 施設への配布実績管理
 5. **在庫管理**: 箱単位・個数単位での在庫管理
-6. **発注管理**: 発注から入荷までの管理
-7. **在庫変動履歴**: 全ての在庫変動を記録
+6. **発注管理**: 発注申請・承認・ステータス管理
+7. **入荷管理**: 発注に対する分割入荷の記録と在庫反映
+8. **在庫変動履歴**: 全ての在庫変動を記録
 
 ## データ形式
 
