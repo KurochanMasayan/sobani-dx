@@ -1,6 +1,6 @@
 {
-  "tableName": "supplies",
-  "displayName": "医材マスタ",
+  "tableName": "商品マスタ",
+  "displayName": "商品マスタ",
   "description": "医療機器・医療材料の基本情報を管理するマスタテーブル",
   "columns": [
     {
@@ -22,48 +22,12 @@
       "description": "医材の正式名称"
     },
     {
-      "name": "category",
-      "type": "Enum",
-      "displayName": "カテゴリ",
-      "required": true,
-      "enumValues": ["消耗品", "機器", "薬剤", "その他"],
-      "description": "医材の分類"
-    },
-    {
-      "name": "subcategory",
-      "type": "Text",
-      "displayName": "サブカテゴリ",
-      "required": false,
-      "description": "詳細な分類"
-    },
-    {
-      "name": "manufacturer",
-      "type": "Text",
-      "displayName": "メーカー名",
-      "required": false,
-      "description": "製造メーカー"
-    },
-    {
-      "name": "model_number",
-      "type": "Text",
-      "displayName": "型番",
-      "required": false,
-      "description": "製品の型番"
-    },
-    {
-      "name": "jan_code",
-      "type": "Text",
-      "displayName": "JANコード",
-      "required": false,
-      "description": "商品識別用バーコード"
-    },
-    {
-      "name": "unit_price",
+      "name": "pieces_per_box",
       "type": "Number",
-      "displayName": "単価",
-      "required": false,
-      "decimalDigits": 2,
-      "description": "1単位あたりの価格（円）"
+      "displayName": "箱入数",
+      "required": true,
+      "initialValue": "1",
+      "description": "1箱あたりの個数"
     },
     {
       "name": "unit",
@@ -73,57 +37,41 @@
       "description": "数量の単位（箱、個、本など）"
     },
     {
-      "name": "supplier",
+      "name": "supplier_id",
       "type": "Text",
-      "displayName": "供給業者",
-      "required": false,
-      "description": "主要な供給業者名"
-    },
-    {
-      "name": "safety_stock",
-      "type": "Number",
-      "displayName": "安全在庫数",
+      "displayName": "発注先ID",
       "required": true,
-      "initialValue": "0",
-      "description": "最低限保持すべき在庫数"
+      "description": "主要な発注先ID"
     },
     {
-      "name": "reorder_point",
-      "type": "Number",
-      "displayName": "発注点",
-      "required": true,
-      "initialValue": "0",
-      "description": "発注を開始する在庫レベル"
-    },
-    {
-      "name": "storage_location",
+      "name": "shelf_number",
       "type": "Text",
-      "displayName": "保管場所",
+      "displayName": "棚番号",
       "required": false,
-      "description": "標準的な保管場所"
+      "description": "標準的な保管棚番号"
     },
     {
-      "name": "expiry_managed",
+      "name": "shelf_level",
+      "type": "Text",
+      "displayName": "段数",
+      "required": false,
+      "description": "標準的な保管段数"
+    },
+    {
+      "name": "fixed_stock_flag",
       "type": "Boolean",
-      "displayName": "有効期限管理",
+      "displayName": "定数在庫フラグ",
       "required": false,
       "initialValue": "FALSE",
-      "description": "有効期限の管理が必要かどうか"
+      "description": "定数在庫管理対象かどうか"
     },
     {
-      "name": "description",
-      "type": "LongText",
-      "displayName": "説明",
+      "name": "fixed_stock_boxes",
+      "type": "Number",
+      "displayName": "定数在庫(箱)",
       "required": false,
-      "description": "医材の詳細説明"
-    },
-    {
-      "name": "is_active",
-      "type": "Boolean",
-      "displayName": "有効フラグ",
-      "required": true,
-      "initialValue": "TRUE",
-      "description": "現在使用中の医材かどうか"
+      "initialValue": "0",
+      "description": "定数在庫の箱数"
     },
     {
       "name": "created_at",
@@ -133,37 +81,36 @@
       "initialValue": "NOW()",
       "editable": false,
       "description": "レコード作成日時"
-    },
-    {
-      "name": "updated_at",
-      "type": "DateTime",
-      "displayName": "更新日時",
-      "required": true,
-      "resetOnEdit": "NOW()",
-      "description": "レコード更新日時"
     }
   ],
   "virtualColumns": [
     {
-      "name": "total_inventory",
+      "name": "total_stock_pieces",
       "type": "Number",
-      "displayName": "総在庫数",
-      "formula": "SUM(SELECT(inventory[current_stock], [supply_id] = [_THISROW].[supply_id]))",
-      "description": "全ロットの合計在庫数"
+      "displayName": "在庫合計個数",
+      "formula": "SUM(SELECT(在庫管理[total_stock_pieces], [supply_id] = [_THISROW].[supply_id]))",
+      "description": "在庫管理テーブルから集計した総個数"
+    },
+    {
+      "name": "current_stock_boxes",
+      "type": "Number",
+      "displayName": "現在在庫(箱)",
+      "formula": "LET( total := [total_stock_pieces], perBox := IF([pieces_per_box] > 0, [pieces_per_box], 1), FLOOR(total / perBox) )",
+      "description": "在庫合計個数を箱単位に換算した値"
+    },
+    {
+      "name": "current_stock_pieces",
+      "type": "Number",
+      "displayName": "現在在庫(個)",
+      "formula": "LET( total := [total_stock_pieces], perBox := IF([pieces_per_box] > 0, [pieces_per_box], 1), total - (FLOOR(total / perBox) * perBox) )",
+      "description": "箱換算後に残る端数個数。負数の場合は箱から借りて正の値に調整"
     },
     {
       "name": "pending_orders",
       "type": "Number",
       "displayName": "発注中数量",
-      "formula": "SUM(SELECT(orders[order_quantity], AND([supply_id] = [_THISROW].[supply_id], [status] = \"発注済\")))",
-      "description": "発注済みだが未入荷の数量"
-    },
-    {
-      "name": "stock_status",
-      "type": "Text",
-      "displayName": "在庫ステータス",
-      "formula": "IF([total_inventory] <= [safety_stock], \"在庫不足\", IF([total_inventory] <= [reorder_point], \"発注推奨\", \"適正\"))",
-      "description": "在庫状況の判定"
+      "formula": "SUM(SELECT(発注管理[order_quantity_boxes], AND([supply_id] = [_THISROW].[supply_id], IN([status], {\"申請中\", \"承認済\", \"発注済\", \"一部入荷\"}))))",
+      "description": "発注中の数量（箱単位）"
     }
   ],
   "security": {
