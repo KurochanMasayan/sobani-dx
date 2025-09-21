@@ -13,7 +13,7 @@
 ### 🏥 Medical Supplies AppSheet (`projects/medical-supplies-appsheet/`)
 - **概要**: 医療機器・医療材料の管理AppSheetアプリケーション
 - **プラットフォーム**: AppSheet + Google Apps Script
-- **機能**: 在庫管理、発注管理、使用履歴管理
+- **機能**: 在庫管理、発注記録、使用履歴管理
 - **詳細**: [Medical Supplies README](projects/medical-supplies-appsheet/README.md)
 
 ## ワークスペース管理

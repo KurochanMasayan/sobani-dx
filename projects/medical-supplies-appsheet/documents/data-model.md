@@ -6,8 +6,8 @@
 
 1. **商品マスタ** - 医材マスタ
 2. **在庫管理** - 在庫管理
-3. **発注管理** - 発注管理
-4. **入荷管理** - 入荷記録
+3. **発注記録** - 発注記録
+4. **入荷記録** - 入荷記録
 5. **使用履歴** - 使用履歴
 
 ## 2. テーブル詳細設計
@@ -42,7 +42,7 @@
 | last_updated | DateTime | ✓ | 最終更新日時 | 2024-01-02 12:34:56 |
 | updated_by | Text | ✓ | 更新者 | user@example.com |
 
-### 2.3 発注管理
+### 2.3 発注記録
 
 | フィールド名 | データ型 | 必須 | 説明 | 例 |
 |-------------|---------|------|------|---|
@@ -62,7 +62,7 @@
 | notes | LongText |  | 備考 | 緊急発注 |
 | created_at | DateTime | ✓ | 作成日時 | 2024-01-01 10:00:00 |
 
-### 2.4 入荷管理
+### 2.4 入荷記録
 
 | フィールド名 | データ型 | 必須 | 説明 | 例 |
 |-------------|---------|------|------|---|
@@ -97,9 +97,9 @@
 
 ```
 商品マスタ (1) ←→ (n) 在庫管理
-商品マスタ (1) ←→ (n) 発注管理
-発注管理 (1) ←→ (n) 入荷管理
-商品マスタ (1) ←→ (n) 入荷管理
+商品マスタ (1) ←→ (n) 発注記録
+発注記録 (1) ←→ (n) 入荷記録
+商品マスタ (1) ←→ (n) 入荷記録
 商品マスタ (1) ←→ (n) 使用履歴
 ```
 
@@ -115,8 +115,8 @@
 
 - **商品マスタ**: supply_id, pieces_per_box, supplier_id
 - **在庫管理**: supply_id, expiry_date, stock_boxes
-- **発注管理**: supply_id, status, order_date, department
-- **入荷管理**: order_id, delivery_date
+- **発注記録**: supply_id, status, order_date, department
+- **入荷記録**: order_id, delivery_date
 - **使用履歴**: supply_id, usage_date, department
 
 ## 5. データ整合性ルール
@@ -126,12 +126,12 @@
 - current_stock >= 0
 - allocated_stock >= 0
 
-### 5.2 発注管理ルール
+### 5.2 発注記録ルール
 - total_amount = order_quantity_boxes × unit_price
 - approved_date >= order_date
-- status = "入荷完了" → SUM(SELECT(入荷管理[received_quantity_boxes], [order_id] = [_THISROW].[order_id])) = order_quantity_boxes
+- status = "入荷完了" → SUM(SELECT(入荷記録[received_quantity_boxes], [order_id] = [_THISROW].[order_id])) = order_quantity_boxes
 
-### 5.3 入荷管理ルール
+### 5.3 入荷記録ルール
 - SUM(received_quantity_boxes) <= order_quantity_boxes
 - delivery_date >= order_date
 - 入荷登録時に 在庫管理[stock_boxes] と [stock_pieces] を更新し、端数がマイナスの場合は箱を調整
@@ -145,19 +145,19 @@
 ### 6.1 Key設定
 - 商品マスタ: supply_id
 - 在庫管理: inventory_id
-- 発注管理: order_id
-- 入荷管理: receipt_id
+- 発注記録: order_id
+- 入荷記録: receipt_id
 - 使用履歴: usage_id
 
 ### 6.2 Ref設定
 - 在庫管理.supply_id → 商品マスタ.supply_id
-- 発注管理.supply_id → 商品マスタ.supply_id
-- 入荷管理.order_id → 発注管理.order_id（IsPartOf）
+- 発注記録.supply_id → 商品マスタ.supply_id
+- 入荷記録.order_id → 発注記録.order_id（IsPartOf）
 - 使用履歴.supply_id → 商品マスタ.supply_id
 
 ### 6.3 Virtual Column例
 - 商品マスタ.total_stock_pieces: SUM(SELECT(在庫管理[total_stock_pieces], [supply_id] = [_THISROW].[supply_id]))
-- 商品マスタ.pending_orders: SUM(SELECT(発注管理[order_quantity_boxes], [supply_id] = [_THISROW].[supply_id], IN([status], {"申請中", "承認済", "発注済", "一部入荷"})))
+- 商品マスタ.pending_orders: SUM(SELECT(発注記録[order_quantity_boxes], [supply_id] = [_THISROW].[supply_id], IN([status], {"申請中", "承認済", "発注済", "一部入荷"})))
 
 ## 7. データ移行計画
 
