@@ -109,7 +109,7 @@
       "name": "pending_orders",
       "type": "Number",
       "displayName": "発注中数量",
-      "formula": "SUM(SELECT(発注管理[order_quantity_boxes], AND([supply_id] = [_THISROW].[supply_id], IN([status], {\"申請中\", \"承認済\", \"発注済\", \"一部入荷\"}))))",
+      "formula": "SUM(SELECT(発注記録[order_quantity_boxes], AND([supply_id] = [_THISROW].[supply_id], IN([status], {\"申請中\", \"承認済\", \"発注済\", \"一部入荷\"}))))",
       "description": "発注中の数量（箱単位）"
     }
   ],

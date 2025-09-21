@@ -1,6 +1,6 @@
 # 医材管理 AppSheet プロジェクト
 
-医療機器・医療材料の在庫管理、発注管理、使用履歴管理を行うAppSheetアプリケーションプロジェクトです。
+医療機器・医療材料の在庫管理、発注記録、使用履歴管理を行うAppSheetアプリケーションプロジェクトです。
 
 ## プロジェクト構造
 
@@ -11,7 +11,7 @@ medical-supplies-appsheet/
 │   ├── table-schemas/          # テーブルスキーマ定義
 │   │   ├── supplies.json       # 医材マスタ
 │   │   ├── inventory.json      # 在庫管理
-│   │   ├── orders.json         # 発注管理
+│   │   ├── orders.json         # 発注記録
 │   │   └── usage-logs.json     # 使用履歴
 │   ├── workflows/              # ワークフロー定義
 │   │   ├── order-approval.json # 発注承認フロー
@@ -52,7 +52,7 @@ medical-supplies-appsheet/
 - 在庫切れアラート
 - 適正在庫レベル設定
 
-### 3. 発注管理
+### 3. 発注記録
 - 発注申請・承認ワークフロー
 - 発注履歴管理
 - 納期管理
