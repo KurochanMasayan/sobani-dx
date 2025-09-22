@@ -7,19 +7,13 @@
 ```
 medical-supplies-appsheet/
 ├── appsheet/                   # AppSheet関連ファイル
-│   ├── app-definition.json     # AppSheetアプリ定義
+│   ├── implementation-guides/  # 実装ガイド
+│   │   └── 06-facility-templates-bulk-copy.md  # 施設別テンプレート一括複製
 │   ├── table-schemas/          # テーブルスキーマ定義
 │   │   ├── supplies.json       # 医材マスタ
-│   │   ├── inventory.json      # 在庫管理
-│   │   ├── orders.json         # 発注記録
-│   │   └── usage-logs.json     # 使用履歴
-│   ├── workflows/              # ワークフロー定義
-│   │   ├── order-approval.json # 発注承認フロー
-│   │   └── stock-alert.json    # 在庫アラート
-│   └── views/                  # ビュー定義
-│       ├── dashboard.json      # ダッシュボード
-│       ├── inventory-list.json # 在庫一覧
-│       └── order-form.json     # 発注フォーム
+│   │   └── inventory.json      # 在庫管理
+│   ├── workflows/              # ワークフロー定義（現在空）
+│   └── views/                  # ビュー定義（現在空）
 ├── gas-integration/            # GAS連携スクリプト
 │   ├── src/
 │   │   ├── csvExporter.ts      # CSV一括出力機能
@@ -30,13 +24,22 @@ medical-supplies-appsheet/
 │   └── .clasp.json
 ├── documents/                  # プロジェクトドキュメント
 │   ├── requirements.md         # 要件定義
-│   ├── data-model.md          # データモデル設計
-│   ├── user-manual.md         # ユーザーマニュアル
-│   └── deployment.md          # デプロイ手順
-├── scripts/                    # 運用スクリプト
-│   ├── setup.sh               # 初期セットアップ
-│   ├── backup.sh              # バックアップ
-│   └── deploy.sh              # デプロイ
+│   └── data-model.md          # データモデル設計
+├── scripts/                    # 運用スクリプト（現在空）
+├── data-model/                 # データモデル
+│   ├── csv-data/              # CSVデータファイル
+│   │   ├── masters/           # マスタデータ
+│   │   │   ├── 施設マスタ.csv
+│   │   │   ├── 患者マスタ.csv
+│   │   │   ├── 商品マスタ.csv
+│   │   │   ├── 配布テンプレート.csv
+│   │   │   └── その他マスタファイル
+│   │   └── transactions/      # トランザクションデータ
+│   │       ├── 配布記録.csv
+│   │       ├── 在庫変動履歴.csv
+│   │       └── その他取引ファイル
+│   ├── documentation/         # データモデルドキュメント
+│   └── README.md              # データモデル説明
 └── README.md                   # このファイル
 ```
 
@@ -68,15 +71,20 @@ medical-supplies-appsheet/
 - カスタムシート選択出力
 - データバックアップとリポジトリ取り込み対応
 
+### 6. 施設別テンプレート一括複製機能
+- 施設選択による関連テンプレート表示
+- 複数テンプレートの一括選択
+- 配布記録への一括複製
+- 奇数月/偶数月の自動数量判定
+- 患者別・施設別の配布タイプ自動判定
+
 ## セットアップ手順
 
 1. AppSheetでの新規アプリ作成
 2. テーブルスキーマの設定
-3. ワークフローの設定
+3. ワークフローの設定（必要に応じて）
 4. ビューのカスタマイズ
-5. GAS連携の設定（必要に応じて）
-
-詳細は `documents/deployment.md` を参照してください。
+5. GAS連携の設定（CSV出力機能使用時）
 
 ## CSV一括出力機能
 
@@ -172,6 +180,42 @@ exportCustomSheetsButton()
 - AppSheetの設定変更は必ずJSONファイルに反映すること
 - データモデルの変更時は `documents/data-model.md` を更新すること
 - 新機能追加時は要件定義を更新すること
+
+## 施設別テンプレート一括複製機能
+
+### 機能概要
+
+配布テンプレートから施設単位で複数のテンプレートを選択し、配布記録に一括複製する機能です。定期配布の効率化と、施設ごとの一括処理を実現します。
+
+### 主な機能
+
+1. **施設選択ビュー**
+   - 施設一覧から複製元の施設を選択
+   - 施設ごとのテンプレート数を表示
+
+2. **テンプレート選択機能**
+   - 選択した施設のテンプレート一覧表示
+   - チェックボックスによる複数選択
+   - 全選択/選択解除ボタン
+
+3. **一括複製処理**
+   - 選択したテンプレートを配布記録に複製
+   - 配布IDの自動生成（重複しないタイムスタンプ形式）
+   - 奇数月/偶数月に応じた数量の自動設定
+   - 個別配布/施設配布の自動判定
+
+### 実装詳細
+
+詳しい実装手順は `appsheet/implementation-guides/06-facility-templates-bulk-copy.md` を参照してください。
+
+### 使用方法
+
+1. 配布テンプレート一覧ビューから施設を選択
+2. 施設別テンプレート一覧ビューに遷移
+3. 複製したいテンプレートにチェック
+4. 「選択済みを複製実行」ボタンをクリック
+5. 確認ダイアログで「OK」を選択
+6. 配布記録に自動追加される
 
 ## 関連プロジェクト
 
