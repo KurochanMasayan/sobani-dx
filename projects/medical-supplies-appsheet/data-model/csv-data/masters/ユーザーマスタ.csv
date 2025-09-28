@@ -1,6 +1,7 @@
 メールアドレス,氏名,ロール,有効フラグ,電話番号,備考
 t.kawamoto@hks-sbn.jp,川本達也,管理者,TRUE,,システム管理者
 masaya.kurotani@gmail.com,黒谷雅哉,管理者,TRUE,,システム管理者
+d.yamashita@hks-sbn.jp,山下大亮,管理者,TRUE,,システム管理者
 admin@example.com,山田太郎,管理者,TRUE,011-111-1111,システム管理者
 nurse01@example.com,佐藤花子,看護師,TRUE,011-222-2222,訪問看護担当
 nurse02@example.com,鈴木一郎,看護師,TRUE,011-333-3333,訪問看護担当
