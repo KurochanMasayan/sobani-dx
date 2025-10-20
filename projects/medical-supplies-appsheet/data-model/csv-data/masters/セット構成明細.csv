@@ -1,8 +1,8 @@
 構成ID,セットID,商品ID,標準数量,必須フラグ,表示順,備考,作成者,作成日時
-COMP-001,SET-001,PRD-001,1,TRUE,10,点滴バッグ（主要），admin@example.com,2024-10-20 10:30:00
+COMP-001,SET-001,PRD-001,1,TRUE,10,点滴バッグ（主要）,admin@example.com,2024-10-20 10:30:00
 COMP-002,SET-001,PRD-002,1,TRUE,20,点滴ライン,admin@example.com,2024-10-20 10:31:00
 COMP-003,SET-001,PRD-003,2,TRUE,30,アルコール綿,admin@example.com,2024-10-20 10:32:00
-COMP-004,SET-001,PRD-004,1,FALSE,40,絆創膏（予備），admin@example.com,2024-10-20 10:33:00
+COMP-004,SET-001,PRD-004,1,FALSE,40,絆創膏（予備）,admin@example.com,2024-10-20 10:33:00
 COMP-005,SET-002,PRD-005,1,TRUE,10,注射器20ml,admin@example.com,2024-10-20 10:34:00
 COMP-006,SET-002,PRD-006,1,TRUE,20,注射針,admin@example.com,2024-10-20 10:35:00
 COMP-007,SET-002,PRD-007,1,TRUE,30,抗生剤バイアル,admin@example.com,2024-10-20 10:36:00
