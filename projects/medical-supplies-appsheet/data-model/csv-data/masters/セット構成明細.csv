@@ -1,16 +1,16 @@
-構成ID,セットID,商品ID,標準数量,必須フラグ,表示順,備考,作成者,作成日時
-COMP-001,SET-001,PRD-001,1,TRUE,10,点滴バッグ（主要）,admin@example.com,2024-10-20 10:30:00
-COMP-002,SET-001,PRD-002,1,TRUE,20,点滴ライン,admin@example.com,2024-10-20 10:31:00
-COMP-003,SET-001,PRD-003,2,TRUE,30,アルコール綿,admin@example.com,2024-10-20 10:32:00
-COMP-004,SET-001,PRD-004,1,FALSE,40,絆創膏（予備）,admin@example.com,2024-10-20 10:33:00
-COMP-005,SET-002,PRD-005,1,TRUE,10,注射器20ml,admin@example.com,2024-10-20 10:34:00
-COMP-006,SET-002,PRD-006,1,TRUE,20,注射針,admin@example.com,2024-10-20 10:35:00
-COMP-007,SET-002,PRD-007,1,TRUE,30,抗生剤バイアル,admin@example.com,2024-10-20 10:36:00
-COMP-008,SET-003,PRD-008,1,TRUE,10,ガーゼ,admin@example.com,2024-10-20 10:37:00
-COMP-009,SET-003,PRD-009,1,TRUE,20,医療用テープ,admin@example.com,2024-10-20 10:38:00
-COMP-010,SET-003,PRD-010,1,TRUE,30,消毒液,admin@example.com,2024-10-20 10:39:00
-COMP-011,SET-004,PRD-011,1,TRUE,10,採血管,admin@example.com,2024-10-20 10:40:00
-COMP-012,SET-004,PRD-012,1,TRUE,20,採血針,admin@example.com,2024-10-20 10:41:00
-COMP-013,SET-004,PRD-013,1,FALSE,30,ラベルシール,admin@example.com,2024-10-20 10:42:00
-COMP-014,SET-005,PRD-014,1,TRUE,10,吸引カテーテル,admin@example.com,2024-10-20 10:43:00
-COMP-015,SET-005,PRD-015,1,TRUE,20,吸引器具,admin@example.com,2024-10-20 10:44:00
+構成ID,セットID,商品ID,標準数量,表示順,備考,作成者,作成日時
+COMP-001,SET-001,PRD-001,1,10,点滴バッグ（主要）,admin@example.com,2024-10-20 10:30:00
+COMP-002,SET-001,PRD-002,1,20,点滴ライン,admin@example.com,2024-10-20 10:31:00
+COMP-003,SET-001,PRD-003,2,30,アルコール綿,admin@example.com,2024-10-20 10:32:00
+COMP-004,SET-001,PRD-004,1,40,絆創膏（予備）,admin@example.com,2024-10-20 10:33:00
+COMP-005,SET-002,PRD-005,1,10,注射器20ml,admin@example.com,2024-10-20 10:34:00
+COMP-006,SET-002,PRD-006,1,20,注射針,admin@example.com,2024-10-20 10:35:00
+COMP-007,SET-002,PRD-007,1,30,抗生剤バイアル,admin@example.com,2024-10-20 10:36:00
+COMP-008,SET-003,PRD-008,1,10,ガーゼ,admin@example.com,2024-10-20 10:37:00
+COMP-009,SET-003,PRD-009,1,20,医療用テープ,admin@example.com,2024-10-20 10:38:00
+COMP-010,SET-003,PRD-010,1,30,消毒液,admin@example.com,2024-10-20 10:39:00
+COMP-011,SET-004,PRD-011,1,10,採血管,admin@example.com,2024-10-20 10:40:00
+COMP-012,SET-004,PRD-012,1,20,採血針,admin@example.com,2024-10-20 10:41:00
+COMP-013,SET-004,PRD-013,1,30,ラベルシール,admin@example.com,2024-10-20 10:42:00
+COMP-014,SET-005,PRD-014,1,10,吸引カテーテル,admin@example.com,2024-10-20 10:43:00
+COMP-015,SET-005,PRD-015,1,20,吸引器具,admin@example.com,2024-10-20 10:44:00
