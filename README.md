@@ -16,6 +16,12 @@
 - **機能**: 在庫管理、発注記録、使用履歴管理
 - **詳細**: [Medical Supplies README](projects/medical-supplies-appsheet/README.md)
 
+### 🏡 居宅指導書管理指導書の作成 (`projects/home-care-guidance-document/`)
+- **概要**: 居宅療養管理指導で使用する指導書・管理指導書を標準化し、テンプレートと作成手順を整備
+- **目的**: 記載漏れ防止、チェックフローの可視化、今後の自動化に向けた要件整理
+- **成果物**: テンプレート、入力ガイド、共有・保存ルール
+- **詳細**: [Home Care Guidance README](projects/home-care-guidance-document/README.md)
+
 ## ワークスペース管理
 
 ### セットアップ
