@@ -50,11 +50,12 @@ function createSinglePdf(facilityName: string): GoogleAppsScript.Drive.File {
   const spreadsheetId = ss.getId();
   const sheetId = calendarSheet.getSheetId();
   
+  // scale: 1=標準(100%), 2=幅に合わせる, 3=高さに合わせる, 4=ページに合わせる
   const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?` +
     `format=pdf&` +
     `size=${CONFIG.PDF.SIZE === 'A4' ? '1' : '0'}&` + // 1=A4, 0=Letter
     `portrait=${CONFIG.PDF.ORIENTATION === 'landscape' ? 'false' : 'true'}&` +
-    `fitw=${CONFIG.PDF.SCALE === 'fit' ? 'true' : 'false'}&` +
+    `scale=3&` + // 高さに合わせる
     `sheetnames=false&` +
     `printtitle=false&` +
     `pagenumbers=false&` +

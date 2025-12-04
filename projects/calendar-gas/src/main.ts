@@ -58,12 +58,13 @@ function createAllPdfsButton(): any {
 
 /**
  * カレンダーデータ同期（ボタン用）
+ * 通常カレンダーと歯科カレンダーの両方を同期
  */
 function syncCalendarButton(): any {
   try {
     console.log('カレンダーデータの同期を開始します...');
     const result = syncCalendarData();
-    console.log(`同期完了: ${result.eventCount}件のイベントを取得`);
+    console.log(`同期完了: 通常カレンダー ${result.eventCount}件、歯科カレンダー ${result.dentalEventCount}件`);
     return result;
   } catch (error: any) {
     console.error(`カレンダー同期エラー: ${error.message}`);
