@@ -16,7 +16,7 @@ const CONFIG = {
     FOLDER_ID: '1FvHFGRSGEj29i60Wj315DZv0W2BmhPV0',
     
     // PDFエクスポート範囲
-    EXPORT_RANGE: 'C1:P25',
+    EXPORT_RANGE: 'C1:R37',
     
     // PDFの設定
     ORIENTATION: 'landscape' as const, // 横向き
@@ -53,11 +53,27 @@ const CONFIG = {
     // カレンダーID（'primary'はデフォルトカレンダー）
     // 複数のカレンダーを使用する場合は配列で指定
     CALENDAR_IDS: ['c_c89f5fd72defb5ef85547e43d4c019687042f5882de1ec7fdfd2edbb6e2064b4@group.calendar.google.com'],
-    
+
     // カレンダーデータを出力するシート名
     OUTPUT_SHEET: 'カレンダーデータ',
-    
+
     // 日付を取得するシートと範囲
+    DATE_SOURCE: {
+      SHEET_NAME: '使い方',
+      START_DATE_CELL: 'B2',  // 開始日のセル
+      END_DATE_CELL: 'B3'      // 終了日のセル
+    }
+  },
+
+  // 歯科カレンダーの設定
+  DENTAL_CALENDAR: {
+    // 歯科用カレンダーID
+    CALENDAR_ID: 'c_4b2c180413cb0c727836433b8f62d492af5d7f282a61d411c0cf3e713bb3f937@group.calendar.google.com',
+
+    // 歯科カレンダーデータを出力するシート名
+    OUTPUT_SHEET: '歯科カレンダーデータ',
+
+    // 日付を取得するシートと範囲（通常のカレンダーと同じ設定を使用）
     DATE_SOURCE: {
       SHEET_NAME: '使い方',
       START_DATE_CELL: 'B2',  // 開始日のセル

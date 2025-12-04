@@ -141,29 +141,30 @@ function exportCalendarToSheet(targetSheetName: string, calendarId: string, star
 
 /**
  * カレンダーデータを同期（ボタン用）
+ * 通常カレンダーと歯科カレンダーの両方を同期する
  */
 function syncCalendarData(): {
   sheetName: string;
   eventCount: number;
   calendarCount?: number;
+  dentalEventCount?: number;
 } {
   try {
-    // 設定からカレンダーIDを取得
-    const calendarIds = CONFIG.CALENDAR.CALENDAR_IDS;
-    const outputSheet = CONFIG.CALENDAR.OUTPUT_SHEET;
-    
     // シートから日付を取得
     const { startDate, endDate } = getDateFromSheet();
-    
+
     console.log(`期間: ${Utilities.formatDate(startDate, 'JST', 'yyyy/MM/dd')} - ${Utilities.formatDate(endDate, 'JST', 'yyyy/MM/dd')}`);
-    
+
+    // === 通常カレンダーの同期 ===
+    const calendarIds = CONFIG.CALENDAR.CALENDAR_IDS;
+    const outputSheet = CONFIG.CALENDAR.OUTPUT_SHEET;
+    let mainResult: { sheetName: string; eventCount: number };
+
     if (calendarIds.length === 1) {
       // 単一カレンダーの場合
-      const result = exportCalendarToSheet(outputSheet, calendarIds[0], startDate, endDate);
-      console.log(`カレンダー同期完了: ${result.eventCount}件のイベントを取得`);
-      console.log(`スプレッドシート: ${SpreadsheetApp.getActiveSpreadsheet().getName()}`);
+      mainResult = exportCalendarToSheet(outputSheet, calendarIds[0], startDate, endDate);
+      console.log(`カレンダー同期完了: ${mainResult.eventCount}件のイベントを取得`);
       console.log(`シート: ${outputSheet}`);
-      return result;
     } else {
       // 複数カレンダーの場合
       const allEvents: Array<{
@@ -175,7 +176,7 @@ function syncCalendarData(): {
         id: string;
         calendarId?: string;
       }> = [];
-      
+
       calendarIds.forEach(calendarId => {
         try {
           const events = getCalendarEvents(calendarId, startDate, endDate);
@@ -187,30 +188,30 @@ function syncCalendarData(): {
           console.error(`カレンダー ${calendarId} の取得に失敗: ${error.message}`);
         }
       });
-      
+
       // 開始時刻でソート
       allEvents.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
-      
+
       console.log(`複数カレンダー同期完了: ${allEvents.length}件のイベントを取得`);
-      
+
       // スプレッドシートに書き込み
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       let sheet = ss.getSheetByName(outputSheet);
       if (!sheet) {
         sheet = ss.insertSheet(outputSheet);
       }
-      
+
       // A~F列のみクリア
       const lastRow = sheet.getMaxRows();
       if (lastRow > 0) {
         sheet.getRange(2, 1, lastRow, 6).clear();
       }
-      
+
       // ヘッダーとデータを書き込み
       if (allEvents.length > 0) {
         const headers = ['日付', '開始時刻', '終了時刻', 'タイトル', 'コメント', 'カレンダーID'];
         sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-        
+
         const data = allEvents.map(event => [
           Utilities.formatDate(event.startTime, 'JST', 'yyyy/M/d'),
           event.allDay ? '終日' : Utilities.formatDate(event.startTime, 'JST', 'H:mm:ss'),
@@ -219,19 +220,35 @@ function syncCalendarData(): {
           event.description || '',
           event.calendarId
         ]);
-        
+
         sheet.getRange(2, 1, data.length, headers.length).setValues(data);
       } else {
         sheet.getRange(2, 1).setValue('指定期間にイベントはありません');
       }
-      
-      return {
+
+      mainResult = {
         sheetName: outputSheet,
-        eventCount: allEvents.length,
-        calendarCount: calendarIds.length
+        eventCount: allEvents.length
       };
     }
-    
+
+    // === 歯科カレンダーの同期 ===
+    console.log('--- 歯科カレンダーの同期開始 ---');
+    const dentalCalendarId = CONFIG.DENTAL_CALENDAR.CALENDAR_ID;
+    const dentalOutputSheet = CONFIG.DENTAL_CALENDAR.OUTPUT_SHEET;
+
+    const dentalResult = exportCalendarToSheet(dentalOutputSheet, dentalCalendarId, startDate, endDate);
+    console.log(`歯科カレンダー同期完了: ${dentalResult.eventCount}件のイベントを取得`);
+    console.log(`シート: ${dentalOutputSheet}`);
+
+    // 結果を返す
+    return {
+      sheetName: mainResult.sheetName,
+      eventCount: mainResult.eventCount,
+      calendarCount: calendarIds.length,
+      dentalEventCount: dentalResult.eventCount
+    };
+
   } catch (error: any) {
     console.error(`同期エラー: ${error.message}`);
     throw error;
