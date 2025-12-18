@@ -25,11 +25,13 @@ function getRegistrySheet() {
  * @returns {Object|null} 見つかった場合は { rowIndex, url, fileId }
  */
 function lookupFacilityRecord(sheet, facilityName, yearMonth) {
+  const normalizedFacility = String(facilityName || '').trim();
+  const normalizedYearMonth = String(yearMonth || '').trim();
   const values = sheet.getDataRange().getValues();
   for (let i = 1; i < values.length; i++) {
     const storedYearMonth = String(values[i][0] || '').trim();
     const storedFacility = String(values[i][1] || '').trim();
-    if (storedYearMonth === yearMonth && storedFacility === facilityName) {
+    if (storedYearMonth === normalizedYearMonth && storedFacility === normalizedFacility) {
       const url = values[i][2] || '';
       return {
         rowIndex: i + 1,
@@ -50,14 +52,18 @@ function lookupFacilityRecord(sheet, facilityName, yearMonth) {
  * @returns {number} 登録された行番号
  */
 function recordFacilityFile(sheet, facilityName, yearMonth, fileId) {
+  const normalizedFacility = String(facilityName || '').trim();
+  const normalizedYearMonth = String(yearMonth || '').trim();
   const url = `https://docs.google.com/spreadsheets/d/${fileId}`;
   const rowIndex = sheet.getLastRow() + 1;
   sheet.getRange(rowIndex, 1, 1, 4).setValues([[
-    yearMonth,
-    facilityName,
+    normalizedYearMonth,
+    normalizedFacility,
     url,
     new Date()
   ]]);
+  // 書き込みを即座に反映（continuePlanGenerationで再開時に確実に検索できるように）
+  SpreadsheetApp.flush();
   logInfo('台帳に事業所ファイルを登録しました', {
     facilityName,
     yearMonth,

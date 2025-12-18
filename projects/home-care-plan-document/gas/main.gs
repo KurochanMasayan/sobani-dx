@@ -42,6 +42,8 @@ function runPlanGeneration(options = { resetQueue: false }) {
     }
 
     let queue = getPendingQueue();
+    let yearMonth = getSavedYearMonth();
+
     if (queue.length === 0 || options.resetQueue) {
       queue = Object.keys(context.visitsByPatient);
       if (queue.length === 0) {
@@ -50,7 +52,10 @@ function runPlanGeneration(options = { resetQueue: false }) {
         cancelContinuationTriggers();
         return;
       }
+      // 新規開始時は現在の年月を保存（月またぎ対策）
+      yearMonth = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM');
       savePendingQueue(queue);
+      saveYearMonth(yearMonth);
     } else {
       queue = queue.filter(id => context.visitsByPatient[id]);
       if (queue.length === 0) {
@@ -60,6 +65,11 @@ function runPlanGeneration(options = { resetQueue: false }) {
         cancelContinuationTriggers();
         return;
       }
+      // 再開時に年月が保存されていなければ現在の年月を使用
+      if (!yearMonth) {
+        yearMonth = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM');
+        saveYearMonth(yearMonth);
+      }
     }
 
     const registrySheet = getRegistrySheet();
@@ -67,7 +77,8 @@ function runPlanGeneration(options = { resetQueue: false }) {
       context,
       queue,
       registrySheet,
-      folders.output
+      folders.output,
+      yearMonth
     );
 
     savePendingQueue(remainingQueue);
@@ -115,7 +126,7 @@ function runPlanGeneration(options = { resetQueue: false }) {
   }
 }
 
-function processQueue(context, queue, registrySheet, outputFolderId) {
+function processQueue(context, queue, registrySheet, outputFolderId, yearMonth) {
   const start = Date.now();
   const processedIds = [];
   const workingQueue = queue.slice();
@@ -138,8 +149,7 @@ function processQueue(context, queue, registrySheet, outputFolderId) {
       continue;
     }
 
-    // 訪問日から年月を抽出
-    const yearMonth = extractYearMonth(visits);
+    // 保存された年月を使用（月またぎ対策）
     processPatientVisits(patient, visits, registrySheet, outputFolderId, yearMonth);
     processedIds.push(patientId);
   }
