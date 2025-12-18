@@ -9,7 +9,7 @@ let FACILITY_SPREADSHEET_CACHE = {};
 
 function processPatientVisits(patient, visitPlan, registrySheet, outputFolderId, yearMonth) {
   // 居宅支援事業所ごと・年月ごとにスプレッドシートを取得または作成
-  const facilityName = patient.facility || '事業所未設定';
+  const facilityName = (patient.facility || '').trim() || '事業所未設定';
   const spreadsheet = getOrCreateFacilitySpreadsheet(facilityName, yearMonth, registrySheet, outputFolderId);
 
   visitPlan.forEach(visit => {
@@ -74,27 +74,6 @@ function getOrCreateFacilitySpreadsheet(facilityName, yearMonth, registrySheet, 
   return newSpreadsheet;
 }
 
-/**
- * 年月を抽出する（訪問日から）
- * @param {Array} visitPlan - 訪問プラン
- * @returns {string} 年月（例: 2025-12）
- */
-function extractYearMonth(visitPlan) {
-  if (!visitPlan || visitPlan.length === 0) {
-    const now = new Date();
-    return Utilities.formatDate(now, 'Asia/Tokyo', 'yyyy-MM');
-  }
-  const firstVisit = visitPlan[0];
-  if (firstVisit.date) {
-    return Utilities.formatDate(firstVisit.date, 'Asia/Tokyo', 'yyyy-MM');
-  }
-  if (firstVisit.dateText) {
-    return firstVisit.dateText.substring(0, 7);
-  }
-  const now = new Date();
-  return Utilities.formatDate(now, 'Asia/Tokyo', 'yyyy-MM');
-}
-
 function duplicateTemplateSheet(spreadsheet, sheetName) {
   // マスターテンプレート（GASが動いているスプレッドシート）から常に最新の原本を取得
   const masterTemplate = SpreadsheetApp.getActiveSpreadsheet();
@@ -145,6 +124,7 @@ function fillTemplateSheet(sheet, patient, visit) {
   setField('zipCode', patient.zip);
   setField('address', patient.address);
   setField('diagnosis', patient.diagnosis);
+  setField('visitLocation', normalizeVisitLocation(patient.facility));
   setField('carePlan', patient.carePlan);
   setField('cautionNote', patient.caution);
   setField('bedriddenLevel', patient.bedridden);
@@ -159,6 +139,19 @@ function setValueEvenIfEmpty(sheet, rangeA1, value) {
 
 function sanitizeName(value) {
   return (value || '').replace(/[\\/:*?"<>|]/g, '_');
+}
+
+/**
+ * 診療場所の表記を正規化
+ * @param {string} location - 診療場所
+ * @returns {string} 正規化された診療場所
+ */
+function normalizeVisitLocation(location) {
+  const value = (location || '').trim();
+  if (value === '個人宅') {
+    return '自宅';
+  }
+  return value;
 }
 
 function cleanupDefaultSheets(spreadsheet) {
