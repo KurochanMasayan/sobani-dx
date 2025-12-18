@@ -56,6 +56,7 @@ function createSinglePdf(facilityName: string): GoogleAppsScript.Drive.File {
     `size=${CONFIG.PDF.SIZE === 'A4' ? '1' : '0'}&` + // 1=A4, 0=Letter
     `portrait=${CONFIG.PDF.ORIENTATION === 'landscape' ? 'false' : 'true'}&` +
     `scale=3&` + // 高さに合わせる
+    `horizontal_alignment=CENTER&` + // 中央配置
     `sheetnames=false&` +
     `printtitle=false&` +
     `pagenumbers=false&` +

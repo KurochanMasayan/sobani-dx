@@ -23,10 +23,10 @@ const CONFIG = {
     SIZE: 'A4' as const,
     SCALE: 'fit' as const, // ページに合わせる
     MARGINS: {
-      top: 0.5,
-      bottom: 0.5,
-      left: 0.5,
-      right: 0.5
+      top: 0.1,
+      bottom: 0.1,
+      left: 0.1,
+      right: 0.1
     }
   },
   
@@ -35,12 +35,12 @@ const CONFIG = {
     // 施設名を取得するセル（施設カレンダーシート）
     NAME_CELL: 'A5',
     
-    // 施設別訪問一覧から施設データを取得する際の設定
+    // 合算訪問一覧から施設データを取得する際の設定
     VISIT_LIST: {
       // シート名
-      SHEET_NAME: '施設別訪問一覧',
-      // データ開始行（A3から）
-      START_ROW: 3,
+      SHEET_NAME: '合算訪問一覧',
+      // データ開始行（A2から）
+      START_ROW: 2,
       // データ列（A列）
       DATA_COLUMN: 1,
       // スキップする値のパターン
