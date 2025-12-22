@@ -9,8 +9,9 @@ const BASE_CONFIG = {
   sheetTemplateName: '原本',
   registrySheetName: '事業所ファイル台帳',
   statusSheetName: '進行管理',
-  queuePropertyKey: 'PLAN_PENDING_QUEUE',
+  queueSheetName: '処理キュー',            // ソート済みキューを保存するシート
   yearMonthPropertyKey: 'PLAN_YEAR_MONTH',  // 処理中の年月を保持（月またぎ対策）
+  runIdPropertyKey: 'PLAN_RUN_ID',          // 実行ID（6分制限による中断再開で同じファイルに追記するため）
   maxExecutionMs: 5 * 60 * 1000, // 5分で一旦中断し、再実行で続きから処理
   cellMap: {
     createdDate: 'H2',        // 作成日（出力日）

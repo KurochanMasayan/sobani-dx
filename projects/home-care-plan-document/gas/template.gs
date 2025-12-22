@@ -7,10 +7,10 @@
  */
 let FACILITY_SPREADSHEET_CACHE = {};
 
-function processPatientVisits(patient, visitPlan, registrySheet, outputFolderId, yearMonth) {
-  // 居宅支援事業所ごと・年月ごとにスプレッドシートを取得または作成
-  const facilityName = (patient.facility || '').trim() || '事業所未設定';
-  const spreadsheet = getOrCreateFacilitySpreadsheet(facilityName, yearMonth, registrySheet, outputFolderId);
+function processPatientVisits(patient, visitPlan, registrySheet, outputFolderId, yearMonth, runId) {
+  // 居宅支援事業所ごと・年月ごと・実行IDごとにスプレッドシートを取得または作成
+  const facilityName = normalizeFacilityName(patient.facility) || '事業所未設定';
+  const spreadsheet = getOrCreateFacilitySpreadsheet(facilityName, yearMonth, registrySheet, outputFolderId, runId);
 
   visitPlan.forEach(visit => {
     const sheetName = buildPatientVisitSheetName(patient, visit);
@@ -22,53 +22,100 @@ function processPatientVisits(patient, visitPlan, registrySheet, outputFolderId,
   cleanupDefaultSheets(spreadsheet);
 }
 
+// 実行ID別フォルダのキャッシュ
+let RUN_FOLDER_CACHE = {};
+
 /**
- * 年月+居宅支援事業所ごとにスプレッドシートを取得または作成
+ * 実行ID用のサブフォルダを取得または作成
+ * @param {string} outputFolderId - 出力フォルダID
+ * @param {string} runId - 実行ID
+ * @returns {Folder} 実行ID用フォルダ
+ */
+function getOrCreateRunFolder(outputFolderId, runId) {
+  if (RUN_FOLDER_CACHE[runId]) {
+    return RUN_FOLDER_CACHE[runId];
+  }
+
+  const outputFolder = DriveApp.getFolderById(outputFolderId);
+  // フォルダ名: 実行日時のみ（例: 2025-12-20-103000）
+  const folderName = runId.split('_')[0].replace(/T/g, '-').replace(/:/g, '');
+
+  // 既存フォルダを検索
+  const existingFolders = outputFolder.getFoldersByName(folderName);
+  if (existingFolders.hasNext()) {
+    const folder = existingFolders.next();
+    RUN_FOLDER_CACHE[runId] = folder;
+    logInfo('既存の実行フォルダを使用します', { folderName, folderId: folder.getId() });
+    return folder;
+  }
+
+  // 新規フォルダを作成
+  const newFolder = outputFolder.createFolder(folderName);
+  RUN_FOLDER_CACHE[runId] = newFolder;
+  logInfo('実行フォルダを新規作成しました', { folderName, folderId: newFolder.getId() });
+  return newFolder;
+}
+
+/**
+ * 年月+居宅支援事業所+実行IDごとにスプレッドシートを取得または作成
  * @param {string} facilityName - 居宅支援事業所名
  * @param {string} yearMonth - 年月（例: 2025-12）
  * @param {Sheet} registrySheet - 台帳シート
  * @param {string} outputFolderId - 出力フォルダID
+ * @param {string} runId - 実行ID（6分制限対応）
  * @returns {Spreadsheet} スプレッドシート
  */
-function getOrCreateFacilitySpreadsheet(facilityName, yearMonth, registrySheet, outputFolderId) {
+function getOrCreateFacilitySpreadsheet(facilityName, yearMonth, registrySheet, outputFolderId, runId) {
   // キャッシュキーを作成（同一実行内で複数患者が同じ事業所に所属する場合のパフォーマンス向上）
-  const cacheKey = `${yearMonth}_${facilityName}`;
+  // 実行IDを含めることで、同一バッチ内でのみキャッシュを使用
+  const cacheKey = `${runId}_${yearMonth}_${facilityName}`;
   if (FACILITY_SPREADSHEET_CACHE[cacheKey]) {
     return FACILITY_SPREADSHEET_CACHE[cacheKey];
   }
 
-  // 既存のファイルを検索
-  const existingRecord = lookupFacilityRecord(registrySheet, facilityName, yearMonth);
+  // 既存のファイルを検索（年月 + 施設名 + 実行IDで検索）
+  const existingRecord = lookupFacilityRecord(registrySheet, facilityName, yearMonth, runId);
   if (existingRecord) {
     logInfo('既存事業所ファイルを使用します', {
       facilityName,
       yearMonth,
+      runId,
       fileId: existingRecord.fileId,
+      folderId: existingRecord.folderId,
       rowIndex: existingRecord.rowIndex
     });
     updateFacilityLastTouched(registrySheet, existingRecord.rowIndex);
     if (!existingRecord.fileId) {
-      throw new Error(`URL からファイルIDを取得できませんでした: facility=${facilityName}, yearMonth=${yearMonth}`);
+      throw new Error(`URL からファイルIDを取得できませんでした: facility=${facilityName}, yearMonth=${yearMonth}, runId=${runId}`);
+    }
+    // 台帳に保存されているフォルダIDをキャッシュに登録（他の施設ファイル作成時に使用）
+    if (existingRecord.folderId) {
+      RUN_FOLDER_CACHE[runId] = DriveApp.getFolderById(existingRecord.folderId);
     }
     const spreadsheet = SpreadsheetApp.openById(existingRecord.fileId);
     FACILITY_SPREADSHEET_CACHE[cacheKey] = spreadsheet;
     return spreadsheet;
   }
 
+  // 実行ID用のサブフォルダを取得または作成
+  const runFolder = getOrCreateRunFolder(outputFolderId, runId);
+
   // 新規スプレッドシートを作成
-  const outputFolder = DriveApp.getFolderById(outputFolderId);
-  const newFileName = `${sanitizeName(yearMonth)}_${sanitizeName(facilityName)}`;
+  const newFileName = sanitizeName(facilityName);
 
   const newSpreadsheet = SpreadsheetApp.create(newFileName);
-  DriveApp.getFileById(newSpreadsheet.getId()).moveTo(outputFolder);
+  DriveApp.getFileById(newSpreadsheet.getId()).moveTo(runFolder);
 
-  const rowIndex = recordFacilityFile(registrySheet, facilityName, yearMonth, newSpreadsheet.getId());
+  // 台帳に実行ID・フォルダIDも含めて登録
+  const rowIndex = recordFacilityFile(registrySheet, facilityName, yearMonth, newSpreadsheet.getId(), runId, runFolder.getId());
   updateFacilityLastTouched(registrySheet, rowIndex);
   logInfo('事業所ファイルを新規作成しました', {
     facilityName,
     yearMonth,
+    runId,
     fileId: newSpreadsheet.getId(),
-    rowIndex
+    rowIndex,
+    folderId: runFolder.getId()
   });
   FACILITY_SPREADSHEET_CACHE[cacheKey] = newSpreadsheet;
   return newSpreadsheet;
@@ -142,16 +189,33 @@ function sanitizeName(value) {
 }
 
 /**
+ * 施設名を正規化
+ * - 前後の空白を削除
+ * - 「（在）」「（施）」などの接頭辞を削除
+ * @param {string} facilityName - 施設名
+ * @returns {string} 正規化された施設名
+ */
+function normalizeFacilityName(facilityName) {
+  return (facilityName || '')
+    .trim()
+    .replace(/^（在）|^（施）|^\(在\)|^\(施\)/g, '')
+    .trim();
+}
+
+/**
  * 診療場所の表記を正規化
+ * - 「（在）」「（施）」などの接頭辞を削除
+ * - 「個人宅」→「自宅」に変換
  * @param {string} location - 診療場所
  * @returns {string} 正規化された診療場所
  */
 function normalizeVisitLocation(location) {
-  const value = (location || '').trim();
-  if (value === '個人宅') {
+  // まず施設名の接頭辞を削除
+  const normalized = normalizeFacilityName(location);
+  if (normalized === '個人宅') {
     return '自宅';
   }
-  return value;
+  return normalized;
 }
 
 function cleanupDefaultSheets(spreadsheet) {
