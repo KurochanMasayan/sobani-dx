@@ -2,10 +2,7 @@
  * ステータスシートの更新
  */
 function getStatusSheet() {
-  const active = SpreadsheetApp.getActiveSpreadsheet();
-  if (!active) {
-    throw new Error('テンプレートスプレッドシートから実行してください');
-  }
+  const active = getActiveSpreadsheetOrThrow();
   let sheet = active.getSheetByName(BASE_CONFIG.statusSheetName);
   if (!sheet) {
     sheet = active.insertSheet(BASE_CONFIG.statusSheetName);

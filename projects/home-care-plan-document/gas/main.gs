@@ -43,6 +43,7 @@ function runPlanGeneration(options = { resetQueue: false }) {
 
     let queue = getPendingQueue();
     let yearMonth = getSavedYearMonth();
+    let runId = getSavedRunId();
 
     if (queue.length === 0 || options.resetQueue) {
       queue = Object.keys(context.visitsByPatient);
@@ -52,10 +53,16 @@ function runPlanGeneration(options = { resetQueue: false }) {
         cancelContinuationTriggers();
         return;
       }
-      // 新規開始時は現在の年月を保存（月またぎ対策）
+      // 施設名でソート（同じ施設の患者が連続して処理されるように）
+      queue = sortQueueByFacility(queue, context.patientMap);
+      // 新規開始時は現在の年月と実行IDを保存
       yearMonth = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM');
-      savePendingQueue(queue);
+      runId = generateRunId();
+      // 初回保存時はpatientMapを渡してスプレッドシートに施設名も記録
+      savePendingQueue(queue, context.patientMap);
       saveYearMonth(yearMonth);
+      saveRunId(runId);
+      logInfo('新規実行を開始しました', { runId, yearMonth, queueSize: queue.length });
     } else {
       queue = queue.filter(id => context.visitsByPatient[id]);
       if (queue.length === 0) {
@@ -65,11 +72,17 @@ function runPlanGeneration(options = { resetQueue: false }) {
         cancelContinuationTriggers();
         return;
       }
-      // 再開時に年月が保存されていなければ現在の年月を使用
+      // 再開時に年月・実行IDが保存されていなければ生成（フォールバック）
       if (!yearMonth) {
         yearMonth = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy-MM');
         saveYearMonth(yearMonth);
       }
+      if (!runId) {
+        runId = generateRunId();
+        saveRunId(runId);
+        logInfo('実行IDが見つからなかったため新規生成しました', { runId });
+      }
+      logInfo('処理を再開しました', { runId, yearMonth, remainingQueue: queue.length });
     }
 
     const registrySheet = getRegistrySheet();
@@ -78,7 +91,8 @@ function runPlanGeneration(options = { resetQueue: false }) {
       queue,
       registrySheet,
       folders.output,
-      yearMonth
+      yearMonth,
+      runId
     );
 
     savePendingQueue(remainingQueue);
@@ -126,7 +140,7 @@ function runPlanGeneration(options = { resetQueue: false }) {
   }
 }
 
-function processQueue(context, queue, registrySheet, outputFolderId, yearMonth) {
+function processQueue(context, queue, registrySheet, outputFolderId, yearMonth, runId) {
   const start = Date.now();
   const processedIds = [];
   const workingQueue = queue.slice();
@@ -135,7 +149,8 @@ function processQueue(context, queue, registrySheet, outputFolderId, yearMonth) 
     if (Date.now() - start >= BASE_CONFIG.maxExecutionMs - 15 * 1000) {
       logInfo('実行時間上限が近いため一時停止', {
         processed: processedIds.length,
-        remaining: workingQueue.length
+        remaining: workingQueue.length,
+        runId
       });
       break;
     }
@@ -149,9 +164,40 @@ function processQueue(context, queue, registrySheet, outputFolderId, yearMonth) 
       continue;
     }
 
-    // 保存された年月を使用（月またぎ対策）
-    processPatientVisits(patient, visits, registrySheet, outputFolderId, yearMonth);
-    processedIds.push(patientId);
+    // 個別患者処理（1人の失敗で全体を止めない）
+    try {
+      const facilityName = normalizeFacilityName(patient.facility) || '不明';
+      logInfo('患者処理開始', {
+        patientId,
+        patientName: patient.name || '名前不明',
+        facility: facilityName,
+        visitCount: visits.length
+      });
+
+      // 保存された年月と実行IDを使用（6分制限対策）
+      processPatientVisits(patient, visits, registrySheet, outputFolderId, yearMonth, runId);
+      processedIds.push(patientId);
+    } catch (patientError) {
+      logError('processQueue:患者個別処理', patientError);
+
+      // クォータ制限エラーの場合は処理を中断（翌日再開可能にする）
+      if (patientError.message && patientError.message.includes('実行した回数が多すぎます')) {
+        logInfo('クォータ制限に達したため処理を中断します', {
+          patientId,
+          patientName: patient.name || '名前不明'
+        });
+        // 現在の患者をキューに戻す
+        workingQueue.unshift(patientId);
+        break;
+      }
+
+      logInfo('患者処理をスキップして続行', {
+        patientId,
+        patientName: patient.name || '名前不明',
+        error: patientError.message
+      });
+      // その他のエラーは次の患者の処理を続行
+    }
   }
 
   return { processedIds, remainingQueue: workingQueue };
