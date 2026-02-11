@@ -12,8 +12,6 @@ package-lock.json
 
 # Build output (TypeScript compiled files)
 dist/
-*.js
-!appsscript.json
 
 # Environment files
 .env
@@ -43,8 +41,6 @@ logs/
 temp/
 tmp/
 
-# Old GAS files (kept for reference but not needed for TypeScript version)
-*.gs
 
 # TypeScript cache
 *.tsbuildinfo
