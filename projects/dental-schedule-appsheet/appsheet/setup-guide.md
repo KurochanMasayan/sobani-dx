@@ -112,8 +112,8 @@
 | 担当衛生士ID | Ref | | → スタッフマスタ (Valid If: [役職]="歯科衛生士") |
 | 診療内容 | Text | | |
 | ステータス | Enum | | Values: 予定, 完了, キャンセル / Default: 予定 |
-| 医師算定 | Yes/No | | Default: FALSE |
-| 衛生士算定 | Yes/No | | Default: FALSE |
+| 医師算定 | Yes/No | | Default: FALSE / Editable_If: FALSE（アクション経由で変更） |
+| 衛生士算定 | Yes/No | | Default: FALSE / Editable_If: FALSE（アクション経由で変更） |
 | 衛生士滞在時間 | Number | | |
 | 診療メモ | LongText | | |
 | 備考 | LongText | | |
@@ -175,6 +175,9 @@ ISNOTBLANK([_THIS])
 
 ### 4.1 患者マスタに追加
 
+※ 以下の式では `USERSETTINGS("対象年月")` を使用。
+User Settings の設定方法はセクション10を参照。
+
 #### 当月訪問回数
 ```
 COUNT(
@@ -182,8 +185,8 @@ COUNT(
     診療スケジュール[スケジュールID],
     AND(
       [患者ID] = [_THISROW].[ID],
-      MONTH([訪問日]) = MONTH(TODAY()),
-      YEAR([訪問日]) = YEAR(TODAY()),
+      MONTH([訪問日]) = MONTH(USERSETTINGS("対象年月")),
+      YEAR([訪問日]) = YEAR(USERSETTINGS("対象年月")),
       [ステータス] <> "キャンセル"
     )
   )
@@ -198,8 +201,9 @@ COUNT(
     AND(
       [患者ID] = [_THISROW].[ID],
       [医師算定] = TRUE,
-      MONTH([訪問日]) = MONTH(TODAY()),
-      YEAR([訪問日]) = YEAR(TODAY())
+      MONTH([訪問日]) = MONTH(USERSETTINGS("対象年月")),
+      YEAR([訪問日]) = YEAR(USERSETTINGS("対象年月")),
+      [ステータス] <> "キャンセル"
     )
   )
 )
@@ -213,8 +217,9 @@ COUNT(
     AND(
       [患者ID] = [_THISROW].[ID],
       [衛生士算定] = TRUE,
-      MONTH([訪問日]) = MONTH(TODAY()),
-      YEAR([訪問日]) = YEAR(TODAY())
+      MONTH([訪問日]) = MONTH(USERSETTINGS("対象年月")),
+      YEAR([訪問日]) = YEAR(USERSETTINGS("対象年月")),
+      [ステータス] <> "キャンセル"
     )
   )
 )
@@ -240,6 +245,16 @@ IF(
     IF([衛生士算定残り] > 0, "衛生士残" & [衛生士算定残り] & "回", "")
   )
 )
+```
+
+#### 当月医師算定超過（Automation Bot用）
+```
+[当月医師算定回数] > 2
+```
+
+#### 当月衛生士算定超過（Automation Bot用）
+```
+[当月衛生士算定回数] > 4
 ```
 
 #### 不在時間一覧（参照用・改行区切り）
@@ -367,6 +382,36 @@ IF(
 #### 患者の衛生士算定残り
 ```
 [患者ID].[衛生士算定残り]
+```
+
+#### 医師算定ステータス表示（Detail View用）
+```
+IF(
+  [医師算定] = TRUE,
+  "✓ 算定済み",
+  IF(
+    [患者ID].[医師算定残り] > 0,
+    "算定可（残" & [患者ID].[医師算定残り] & "回）",
+    "✗ 上限到達"
+  )
+)
+```
+
+#### 衛生士算定ステータス表示（Detail View用）
+```
+IF(
+  [衛生士算定] = TRUE,
+  "✓ 算定済み",
+  IF(
+    [患者ID].[衛生士算定残り] = 0,
+    "✗ 上限到達",
+    IF(
+      AND([衛生士滞在時間] > 0, [衛生士滞在時間] < 20),
+      "✗ 20分未満（" & [衛生士滞在時間] & "分）",
+      "算定可（残" & [患者ID].[衛生士算定残り] & "回）"
+    )
+  )
+)
 ```
 
 #### 訪問日の曜日
@@ -577,23 +622,43 @@ SELECT(
 
 ## 6. アクション（Action）の設定
 
-### 6.1 医師算定ON
+### 6.1 医師算定をONにする
 
 - Action name: 医師算定をONにする
 - For a record of: 診療スケジュール
 - Do this: Data: set the values of some columns
 - Set: 医師算定 = TRUE
 - Only if: AND([医師算定] = FALSE, [患者の医師算定残り] > 0)
+- Prominence: Display prominently
 
-### 6.2 衛生士算定ON
+### 6.2 医師算定をOFFにする
+
+- Action name: 医師算定をOFFにする
+- For a record of: 診療スケジュール
+- Do this: Data: set the values of some columns
+- Set: 医師算定 = FALSE
+- Only if: [医師算定] = TRUE
+- Prominence: Display prominently
+
+### 6.3 衛生士算定をONにする
 
 - Action name: 衛生士算定をONにする
 - For a record of: 診療スケジュール
 - Do this: Data: set the values of some columns
 - Set: 衛生士算定 = TRUE
 - Only if: AND([衛生士算定] = FALSE, [患者の衛生士算定残り] > 0, [衛生士滞在時間] >= 20)
+- Prominence: Display prominently
 
-### 6.3 完了にする
+### 6.4 衛生士算定をOFFにする
+
+- Action name: 衛生士算定をOFFにする
+- For a record of: 診療スケジュール
+- Do this: Data: set the values of some columns
+- Set: 衛生士算定 = FALSE
+- Only if: [衛生士算定] = TRUE
+- Prominence: Display prominently
+
+### 6.5 完了にする
 
 - Action name: 完了にする
 - For a record of: 診療スケジュール
@@ -601,15 +666,20 @@ SELECT(
 - Set: ステータス = "完了"
 - Only if: [ステータス] = "予定"
 
-### 6.4 キャンセルにする
+### 6.6 キャンセルにする
 
 - Action name: キャンセルにする
 - For a record of: 診療スケジュール
 - Do this: Data: set the values of some columns
-- Set: ステータス = "キャンセル"
+- Set:
+  - ステータス = "キャンセル"
+  - 医師算定 = FALSE
+  - 衛生士算定 = FALSE
 - Only if: [ステータス] = "予定"
 
-### 6.5 別の時間帯を追加（患者不在時間の複製）
+→ キャンセル時に算定フラグを自動リセットし、算定回数の整合性を維持
+
+### 6.7 別の時間帯を追加（患者不在時間の複製）
 
 - Action name: 別の時間帯を追加
 - For a record of: 患者不在時間
@@ -627,7 +697,7 @@ SELECT(
 
 → 同じ患者・同じ曜日パターンで別の時間帯を追加。曜日リストがコピーされるので、時間帯だけ変更すればOK
 
-### 6.6 タイムスケジュールPDF生成（レコード追加時に自動実行）
+### 6.8 タイムスケジュールPDF生成（レコード追加時に自動実行）
 
 レコード追加時にPDFを自動生成するイベントアクション。
 
@@ -640,7 +710,7 @@ SELECT(
 
 ※ テンプレートの作成手順は [03_PDFテンプレート設計書](../documents/03_PDFテンプレート設計書.md) を参照
 
-### 6.7 印刷済みにする
+### 6.9 印刷済みにする
 
 - Action name: 印刷済みにする
 - For a record of: 日別訪問計画
@@ -649,7 +719,7 @@ SELECT(
 - Only if: [ステータス] = "作成済み"
 - Prominence: Display prominently
 
-### 6.8 提出済みにする
+### 6.10 提出済みにする
 
 - Action name: 提出済みにする
 - For a record of: 日別訪問計画
@@ -660,7 +730,75 @@ SELECT(
 
 ---
 
-## 7. ナビゲーション設定
+## 7. Automation Bot（算定制限セーフティネット）
+
+スプレッドシート直接編集や同時操作による競合で算定上限を超えた場合に自動補正する。
+
+### 7.1 医師算定超過自動修正
+
+- Bot name: 医師算定超過チェック
+- Event: 診療スケジュール - Data Change - Updates only
+- Condition: `AND([医師算定] = TRUE, [患者ID].[当月医師算定超過] = TRUE)`
+- Step: Run a data action
+  - Action: Data: set the values of some columns
+  - Set: 医師算定 = FALSE
+
+### 7.2 衛生士算定超過自動修正
+
+- Bot name: 衛生士算定超過チェック
+- Event: 診療スケジュール - Data Change - Updates only
+- Condition: `AND([衛生士算定] = TRUE, [患者ID].[当月衛生士算定超過] = TRUE)`
+- Step: Run a data action
+  - Action: Data: set the values of some columns
+  - Set: 衛生士算定 = FALSE
+
+---
+
+## 8. Format Rules（視覚的フィードバック）
+
+### 8.1 医師算定済み（緑背景）
+
+- Rule name: 医師算定済み
+- For this data: 診療スケジュール
+- If this condition is true: `[医師算定] = TRUE`
+- Format: Background color = 緑（#E8F5E9）
+- Apply to: 医師算定ステータス表示
+
+### 8.2 医師算定上限到達（赤文字）
+
+- Rule name: 医師算定上限到達
+- For this data: 診療スケジュール
+- If this condition is true: `AND([患者ID].[医師算定残り] = 0, [医師算定] = FALSE)`
+- Format: Text color = 赤（#D32F2F）
+- Apply to: 医師算定ステータス表示
+
+### 8.3 衛生士算定済み（緑背景）
+
+- Rule name: 衛生士算定済み
+- For this data: 診療スケジュール
+- If this condition is true: `[衛生士算定] = TRUE`
+- Format: Background color = 緑（#E8F5E9）
+- Apply to: 衛生士算定ステータス表示
+
+### 8.4 衛生士算定上限到達（赤文字）
+
+- Rule name: 衛生士算定上限到達
+- For this data: 診療スケジュール
+- If this condition is true: `AND([患者ID].[衛生士算定残り] = 0, [衛生士算定] = FALSE)`
+- Format: Text color = 赤（#D32F2F）
+- Apply to: 衛生士算定ステータス表示
+
+### 8.5 20分未満警告（黄背景）
+
+- Rule name: 20分未満警告
+- For this data: 診療スケジュール
+- If this condition is true: `[20分警告] <> ""`
+- Format: Background color = 黄（#FFF9C4）
+- Apply to: 衛生士滞在時間
+
+---
+
+## 9. ナビゲーション設定
 
 メニュー構成:
 1. 本日のスケジュール（Primary）
@@ -676,3 +814,55 @@ SELECT(
 7. 訪問計画（PDF生成用）
    - 訪問計画一覧
    - 訪問計画カレンダー
+
+---
+
+## 10. User Settings（ユーザー設定）
+
+算定管理の対象月をユーザーが切り替えられるようにするための設定。
+
+### 10.1 設定手順
+
+1. AppSheet Editor → Settings → User Settings を開く
+2. 「+ New User Setting」をクリック
+3. 以下を設定:
+
+| 項目 | 値 |
+|------|-----|
+| Setting name | 対象年月 |
+| Type | Date |
+| Default value | `TODAY()` |
+| Description | 算定管理の対象月（この日付の年月で算定回数を集計します） |
+
+### 10.2 利用方法
+
+- アプリ右上の設定アイコンから「対象年月」を変更可能
+- 日付の「日」は無視され、「年」と「月」のみ使用される
+- デフォルトは当日（= 当月）
+
+### 10.3 使用箇所
+
+以下の仮想列で `USERSETTINGS("対象年月")` を参照:
+
+| テーブル | 仮想列 |
+|---------|--------|
+| 患者マスタ | 当月訪問回数、当月医師算定回数、当月衛生士算定回数 |
+| 患者マスタ | 医師算定残り、衛生士算定残り、算定ステータス（間接参照） |
+| 患者マスタ | 当月医師算定超過、当月衛生士算定超過（間接参照） |
+
+### 10.4 運用例
+
+```
+【通常運用】
+  対象年月 = 2026/02/01（デフォルト = 当月）
+  → 2月の算定状況が表示される
+
+【月初の前月精算】
+  対象年月 = 2026/01/01 に変更
+  → 1月の算定状況を確認・修正
+  → 完了後に 2026/02/01 に戻す
+
+【過去月の確認】
+  対象年月 = 任意の月に変更
+  → その月の算定状況を閲覧
+```
