@@ -35,6 +35,12 @@ function buildPatientMap(rows) {
   const header = rows[0];
   const normalizedHeader = header.map(value => normalizeCircledNumbers(value || ''));
   const index = name => normalizedHeader.indexOf(normalizeCircledNumbers(name));
+  // 訪問コメント列は「奇数月」「偶数月」などの接頭辞が付くことがあるため、部分一致で特定する。
+  // 接頭辞の有無・種類に依存しないため、月の奇偶でヘッダ名が変わっても列を取りこぼさない。
+  const indexByContains = keyword => {
+    const target = normalizeCircledNumbers(keyword);
+    return normalizedHeader.findIndex(value => value.includes(target));
+  };
 
   const col = {
     patientId: index('患者ID'),
@@ -50,10 +56,10 @@ function buildPatientMap(rows) {
     dementia: index('認知度'),
     careLevel: index('介護認定'),
     caution: index('日常生活や介護サービスを利用する上での留意点'),
-    visit1Stable: index('定期訪問①（著変なし）'),
-    visit1Change: index('定期訪問①（変更あり）'),
-    visit2Stable: index('定期訪問②（著変なし）'),
-    visit2Change: index('定期訪問②（変更あり）')
+    visit1Stable: indexByContains('定期訪問①（著変なし）'),
+    visit1Change: indexByContains('定期訪問①（変更あり）'),
+    visit2Stable: indexByContains('定期訪問②（著変なし）'),
+    visit2Change: indexByContains('定期訪問②（変更あり）')
   };
 
   rows.slice(1).forEach(row => {
