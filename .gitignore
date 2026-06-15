@@ -31,6 +31,8 @@ dist/
 # OS files
 .DS_Store
 Thumbs.db
+# macOS フォルダアイコン（ファイル名末尾にCRを含み Windows で無効パス→git破損の原因）
+Icon?
 
 # Logs
 *.log
@@ -45,3 +47,6 @@ tmp/
 # TypeScript cache
 *.tsbuildinfo
 .tscache/
+
+# 納品物（ローカルにのみ保持・git管理しない）
+deliverables/spec-docs/
