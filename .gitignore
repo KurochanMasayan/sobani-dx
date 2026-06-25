@@ -50,3 +50,6 @@ tmp/
 
 # 納品物（ローカルにのみ保持・git管理しない）
 deliverables/spec-docs/
+
+# Serena (MCP code-intelligence cache/config)
+.serena/
